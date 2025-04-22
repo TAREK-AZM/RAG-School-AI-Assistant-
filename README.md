@@ -32,11 +32,10 @@ A smart document management system that uses AI to:
 
 **AI/ML**  
 ![Groq](https://img.shields.io/badge/Groq-00A67E?style=for-the-badge&logo=groq&logoColor=white)
-![OpenAI](https://img.shields.io/badge/OpenAI-412991?style=for-the-badge&logo=openai&logoColor=white)
 
 **Frontend**  
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
-![Alpine.js](https://img.shields.io/badge/Alpine.js-8BC0D0?style=for-the-badge&logo=alpine.js&logoColor=white)
+
 
 **Infrastructure**  
 ![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
@@ -59,22 +58,45 @@ cd school-ai-assistant
 
 # Install dependencies
 composer install
-npm install
 
 # Setup environment
 cp .env.example .env
 php artisan key:generate
 
+## 🚀 Create docker container for pgVector to store embeddings "the esiest way"
+# run the docker-compose file
+docker-compose up -d    # or docker-compose up --build
+
 # Configure database in .env
+# set up the .env to match the following values of the container you created
 DB_CONNECTION=pgsql
-DB_HOST=127.0.0.1
-DB_PORT=5432
-DB_DATABASE=school_ai
+DB_HOST=localhost  # Use the container IP you found
+DB_PORT=5433       # Host port you mapped in docker-compose
+DB_DATABASE=School_AI_Assistant
 DB_USERNAME=postgres
-DB_PASSWORD=yourpassword
+DB_PASSWORD=password
 
 # Run migrations
 php artisan migrate
 
 # Start development server
 php artisan serve
+
+
+##  🛠️🛠️ the Keys you need to get the project running 🛠️🛠️
+# 🌟🌟🌟 Groq 🌟🌟🌟 that will be used for generating answers
+GROQ_API_KEY=sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+# 🌟🌟🌟 Nomic 🌟🌟🌟 that will be used for generating embeddings
+# url 🌟: https://atlas.nomic.ai/
+ https://atlas.nomic.ai/
+
+NOMIC_API_KEY=sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+GROQ_MODEL=llama3-70b-8192
+# Vector DB configuration
+VECTORDB_CHUNK_SIZE=1000
+VECTORDB_TOP_K=5
+VECTORDB_SIMILARITY_THRESHOLD=0.7
+```
+
+### Usage
+1.
