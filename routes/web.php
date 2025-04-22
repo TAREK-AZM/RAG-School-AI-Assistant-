@@ -72,3 +72,87 @@ Route::get('/test-db', function() {
         ], 500);
     }
 });
+
+
+
+Route::get('/test-embeddings', function() {
+    // Ensure document exists
+    if (!DB::table('documents')->where('id', 1)->exists()) {
+        DB::table('documents')->insert([
+            'title' => 'Test Document',
+            'category' => 'Test',
+            'filename' => 'test.pdf',
+            'filepath' => 'test/test.pdf',
+            'status' => 'completed',
+            'uploaded_by' => 1,
+            'created_at' => now(),
+            'updated_at' => now()
+        ]);
+    }
+
+    // Clear previous test data
+    DB::table('document_embeddings')->truncate();
+
+    // Create test embeddings
+    $identicalEmbedding = '[' . implode(',', array_fill(0, 1536, 0.42)) . ']';
+    $similarEmbedding = '[' . implode(',', array_fill(0, 1536, 0.45)) . ']';
+    $differentEmbedding = '[' . implode(',', array_fill(0, 1536, 0.9)) . ']';
+
+    // Insert test data with all required fields
+    DB::table('document_embeddings')->insert([
+        [
+            'document_id' => 1, 
+            'content' => 'Identical content', 
+            'chunk_index' => 0,
+            'embedding' => DB::raw("'{$identicalEmbedding}'::vector"),
+            'created_at' => now(),
+            'updated_at' => now()
+        ],
+        [
+            'document_id' => 1, 
+            'content' => 'Similar content', 
+            'chunk_index' => 1,
+            'embedding' => DB::raw("'{$similarEmbedding}'::vector"),
+            'created_at' => now(),
+            'updated_at' => now()
+        ],
+        [
+            'document_id' => 1, 
+            'content' => 'Different content', 
+            'chunk_index' => 2,
+            'embedding' => DB::raw("'{$differentEmbedding}'::vector"),
+            'created_at' => now(),
+            'updated_at' => now()
+        ]
+    ]);
+    
+    // Query with similarity search
+    $results = DB::table('document_embeddings')
+             ->select(
+                 'id',
+                 'content',
+                 'chunk_index',
+                 DB::raw("embedding <-> '{$identicalEmbedding}'::vector AS distance")
+             )
+             ->orderBy('distance')
+             ->get();
+    
+    return response()->json([
+        'query_embedding' => '1536-dimensional vector with all 0.42 values',
+        'results' => $results
+    ]);
+});
+
+
+// routes/web.php
+// Route::post('/ask', function () {
+//     return view('school-assistant');
+// })->name('ask');
+// Route::post('/ask', [SchoolAssistantController::class, 'ask'])->name('ask');
+
+Route::get('/upload', function () {
+    return view('upload');
+} );
+Route::get('/chatpage', function () {
+    return view('chat');
+} );

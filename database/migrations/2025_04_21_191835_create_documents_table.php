@@ -21,7 +21,7 @@ class CreateDocumentsTable extends Migration
             $table->string('filepath');
             $table->string('status')->default('pending'); // pending, processing, completed, failed
             $table->integer('chunk_count')->nullable();
-            $table->unsignedBigInteger('uploaded_by');
+            $table->unsignedBigInteger('uploaded_by')->nullable();
             $table->timestamp('processed_at')->nullable();
             $table->timestamps();
             

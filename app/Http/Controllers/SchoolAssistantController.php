@@ -49,7 +49,7 @@ class SchoolAssistantController extends Controller
             'category' => $request->category ?? 'General',
             'filename' => basename($path),
             'filepath' => $path,
-            'uploaded_by' => 123 ,// Auth::id()
+            // 'uploaded_by' => 123 ,// Auth::id()
         ]);
         
         // Process the document in the background

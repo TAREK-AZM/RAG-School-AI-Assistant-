@@ -33,10 +33,13 @@ return [
 
     // other services...
     'groq' => [
-        'api_key' => env('GROQ_API_KEY'),
-        'embedding_model' => env('GROQ_EMBEDDING_MODEL', 'llama3-embedding-v1'),
-        'chat_model' => env('GROQ_CHAT_MODEL', 'llama3-70b-8192'),
-    ],
+    'api_key' => env('GROQ_API_KEY'),
+    'model' => env('GROQ_MODEL', 'llama3-70b-8192'),
+
+],
+'nomic' => [
+    'api_key' => env('NOMIC_API_KEY'),
+],
 
 
 ];

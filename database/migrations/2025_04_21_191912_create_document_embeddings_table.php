@@ -31,10 +31,24 @@ class CreateDocumentEmbeddingsTable extends Migration
         });
         
         // Add vector column for embeddings (1536 dimensions for OpenAI embeddings)
-        DB::statement('ALTER TABLE document_embeddings ADD COLUMN embedding vector(1536)');
-        
+        DB::statement('ALTER TABLE document_embeddings ADD COLUMN embedding vector(768)');
+       
         // Add index for faster similarity search
-        DB::statement('CREATE INDEX ON document_embeddings USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100)');
+        DB::statement('CREATE INDEX ON document_embeddings USING hnsw (embedding vector_cosine_ops)');    
+
+        // Test inserting a vector - CORRECTED VERSION
+        // $values = implode(',', array_fill(0, 1536, 0.01));
+        // DB::statement("
+        //     INSERT INTO document_embeddings 
+        //     (document_id, content, chunk_index, embedding)
+        //     VALUES (?, ?, ?, ?::vector)",
+        //     [
+        //         1, 
+        //         'Test content', 
+        //         0,
+        //         "[$values]" // Proper vector format with brackets
+        //     ]
+        // );
     }
 
     /**

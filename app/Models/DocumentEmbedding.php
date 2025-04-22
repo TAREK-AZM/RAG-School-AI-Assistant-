@@ -19,6 +19,11 @@ class DocumentEmbedding extends Model
     /**
      * Get the document that owns the embedding
      */
+    protected $casts = [
+        // No need to cast if storing as raw PostgreSQL vector literal
+        // 'embedding' => 'array', // Only use if storing as JSON
+    ];
+
     public function document()
     {
         return $this->belongsTo(Document::class);
