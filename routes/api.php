@@ -1,19 +1,22 @@
 <?php
 
+use App\Http\Controllers\SchoolAssistantController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-/*
-|--------------------------------------------------------------------------
-| API Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register API routes for your application. These
-| routes are loaded by the RouteServiceProvider within a group which
-| is assigned the "api" middleware group. Enjoy building your API!
-|
-*/
-
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
-});
+// Route::middleware('auth:sanctum')->group(function () {
+    // API endpoint for asking questions
+    Route::post('/school-assistant/ask', [SchoolAssistantController::class, 'askQuestion']);
+    
+    // API endpoint for listing documents
+    Route::get('/school-assistant/documents', [SchoolAssistantController::class, 'listDocuments']);
+    
+    // Admin-only endpoints
+    // Route::middleware('admin')->group(function () {
+        // Upload document
+    Route::post('/school-assistant/upload', [SchoolAssistantController::class, 'uploadDocument']);
+        
+        // Delete document
+    Route::delete('/school-assistant/documents/{id}', [SchoolAssistantController::class, 'deleteDocument']);
+    // });
+// });

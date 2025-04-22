@@ -31,4 +31,12 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    // other services...
+    'groq' => [
+        'api_key' => env('GROQ_API_KEY'),
+        'embedding_model' => env('GROQ_EMBEDDING_MODEL', 'llama3-embedding-v1'),
+        'chat_model' => env('GROQ_CHAT_MODEL', 'llama3-70b-8192'),
+    ],
+
+
 ];
