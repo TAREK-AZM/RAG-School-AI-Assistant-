@@ -131,21 +131,42 @@ private function generateAnswer($question, $relevantDocs)
 {
     // Prepare context from relevant documents
     $context = "Based on the following information from school documents:\n\n";
-    
+    // Debugging output before sending request
+    dd($relevantDocs); // This will stop the script and show the context in the terminal
     foreach ($relevantDocs as $doc) {
+        // here i want debug he i want show the content in terminal
+
         $context .= "From \"{$doc->title}\" ({$doc->category}):\n{$doc->content}\n\n";
     }
     
     // Call the Groq API
+    // $response = Http::withHeaders([
+    //     'Authorization' => 'Bearer ' . config('services.groq.api_key'),
+    //     'Content-Type' => 'application/json',
+    // ])->post('https://api.groq.com/v1/chat/completions ', [
+    //     'model' => config('services.groq.model', 'llama-3.3-70b-versatile'),
+    //     'messages' => [
+    //         [
+    //             'role' => 'system',
+    //             'content' => 'You are a helpful assistant for our school. Answer questions based only on the provided context. If the information isn\'t in the context, simply say you don\'t have that information in your knowledge base.'
+    //         ],
+    //         [
+    //             'role' => 'user',
+    //             'content' => $context . "\n\nQuestion: " . $question
+    //         ]
+    //     ],
+    //     'temperature' => 0.3,
+    //     'max_tokens' => 500
+    // ]);
     $response = Http::withHeaders([
         'Authorization' => 'Bearer ' . config('services.groq.api_key'),
         'Content-Type' => 'application/json',
     ])->post('https://api.groq.com/openai/v1/chat/completions', [
-        'model' => config('services.groq.chat_model', 'llama3-70b-8192'),
+        'model' => config('services.groq.model', 'llama-3.3-70b-versatile'),
         'messages' => [
             [
                 'role' => 'system',
-                'content' => 'You are a helpful assistant for our school. Answer questions based only on the provided context. If the information isn\'t in the context, simply say you don\'t have that information in your knowledge base.'
+                'content' => 'You are a helpful assistant for our school. Answer questions based only on the provided context. If the information isn’t in the context, simply say you don’t have that information in your knowledge base.'
             ],
             [
                 'role' => 'user',
@@ -156,9 +177,10 @@ private function generateAnswer($question, $relevantDocs)
         'max_tokens' => 500
     ]);
     
+    
     if (!$response->successful()) {
         Log::error("LLM API error: " . $response->body());
-        return "I'm sorry, I encountered an error generating a response. Please try again later.";
+        return "I'm sorry, I encountered an error generating a response. Please try again later.".$response->body() ;
     }
     
     return $response->json()['choices'][0]['message']['content'];
