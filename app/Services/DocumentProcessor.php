@@ -7,6 +7,7 @@ use App\Models\DocumentEmbedding;
 use Illuminate\Support\Facades\Storage;
 use Spatie\PdfToText\Pdf;
 use Illuminate\Support\Facades\DB;
+use Laravel\Embeddings\Splitters\Re;
 
 class DocumentProcessor
 {
@@ -82,7 +83,7 @@ class DocumentProcessor
         
         $chunks = [];
         $currentChunk = '';
-        $chunkSize = config('vectordb.chunk_size', 1000);
+        $chunkSize = config('vectordb.chunk_size', 500);
         
         foreach ($paragraphs as $paragraph) {
             $paragraph = trim($paragraph);
@@ -119,6 +120,23 @@ class DocumentProcessor
         return $chunks;
     }
     
+
+
+    private function processChunks(Document $document, array $chunks)
+    {
+        foreach ($chunks as $index => $chunk) {
+            // Generate embedding for the chunk
+            $embedding = $this->embeddingService->generateEmbedding($chunk);
+
+            // Store the chunk and its embedding
+            DocumentEmbedding::create([
+                'document_id' => $document->id,
+                'content' => $chunk,
+                'embedding' => DB::raw("'{$embedding}'::vector"), // Use DB::raw() for vector literal
+                'chunk_index' => $index,
+            ]);
+        }
+    }
     /**
      * Process chunks and create embeddings
      *
@@ -142,20 +160,6 @@ class DocumentProcessor
         }
     }
 
-    private function processChunks(Document $document, array $chunks)
-{
-    foreach ($chunks as $index => $chunk) {
-        // Generate embedding for the chunk
-        $embedding = $this->embeddingService->generateEmbedding($chunk);
-
-        // Store the chunk and its embedding
-        DocumentEmbedding::create([
-            'document_id' => $document->id,
-            'content' => $chunk,
-            'embedding' => DB::raw("'{$embedding}'::vector"), // Use DB::raw() for vector literal
-            'chunk_index' => $index,
-        ]);
-    }
-}
+    
 }
 

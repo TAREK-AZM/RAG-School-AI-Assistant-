@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\QuestionRequest;
 use App\Jobs\ProcessDocumentJob;
 use App\Models\Document;
+use App\Models\DocumentEmbedding;
 use App\Services\DocumentProcessor;
 use App\Services\QueryService;
 use Illuminate\Http\Request;
@@ -82,13 +83,26 @@ class SchoolAssistantController extends Controller
      */
     public function listDocuments(Request $request)
     {
-        $query = Document::query();
+        // $query = Document::all();
         
-        if ($request->has('category')) {
-            $query->where('category', $request->category);
-        }
+        // if ($request->has('category')) {
+        //     $query->where('category', $request->category);
+        // }
         
-        $documents = $query->paginate(15);
+        $documents = Document::all();
+        
+        return response()->json($documents);
+    }
+
+    public function listChunks(Request $request)
+    {
+        // $query = Document::all();
+        
+        // if ($request->has('category')) {
+        //     $query->where('category', $request->category);
+        // }
+        
+        $documents = DocumentEmbedding::all();
         
         return response()->json($documents);
     }
@@ -107,6 +121,21 @@ class SchoolAssistantController extends Controller
         $document->embeddings()->delete();
         $document->delete();
         
+        return response()->json([
+            'message' => 'Document and related embeddings deleted successfully'
+        ]);
+    }
+    public function deleteDocumentAll()
+    {
+        $documents = Document::all();
+        
+        // Delete the file
+        foreach ($documents as $document) {
+            $document->embeddings()->delete();
+            Storage::delete($document->filepath);
+            $document->delete();
+        }
+                
         return response()->json([
             'message' => 'Document and related embeddings deleted successfully'
         ]);

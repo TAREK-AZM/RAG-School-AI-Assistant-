@@ -4,19 +4,27 @@ use App\Http\Controllers\SchoolAssistantController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-// Route::middleware('auth:sanctum')->group(function () {
-    // API endpoint for asking questions
-    Route::post('/school-assistant/ask', [SchoolAssistantController::class, 'askQuestion']);
+// Public routes
+Route::get('/school-assistant', [SchoolAssistantController::class, 'index'])->name('school-assistant');
+
+    // Chat page
+Route::get('/chatpage', function () {
+    return view('chat');
+} );
+    // Chat Ask questions
+Route::post('/school-assistant/ask', [SchoolAssistantController::class, 'askQuestion'])->name('school-assistant.ask');
     
-    // API endpoint for listing documents
-    Route::get('/school-assistant/documents', [SchoolAssistantController::class, 'listDocuments']);
+    // View documents
+Route::get('/school-assistant/documents', [SchoolAssistantController::class, 'listDocuments'])->name('school-assistant.documents');
+Route::get('/school-assistant/chunks', [SchoolAssistantController::class, 'listChunks'])->name('school-assistant.chunks');
+
+    // Upload documents page
+Route::get('/upload', function () {
+    return view('upload');// 
+} );
+    // Upload documents
+Route::post('/school-assistant/upload', [SchoolAssistantController::class, 'uploadDocument'])->name('school-assistant.upload');
     
-    // Admin-only endpoints
-    // Route::middleware('admin')->group(function () {
-        // Upload document
-    Route::post('/school-assistant/upload', [SchoolAssistantController::class, 'uploadDocument']);
-        
-        // Delete document
-    Route::delete('/school-assistant/documents/{id}', [SchoolAssistantController::class, 'deleteDocument']);
-    // });
-// });
+    // Delete document
+Route::delete('/school-assistant/documents/{id}', [SchoolAssistantController::class, 'deleteDocument'])->name('school-assistant.delete');
+Route::delete('/school-assistant/documents', [SchoolAssistantController::class, 'deleteDocumentAll'])->name('school-assistant.deleteAll');
