@@ -7,14 +7,14 @@ use App\Models\DocumentEmbedding;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-
+use App\Services\NomicEmbeddingService;
 class QueryService
 {
-    protected $embeddingService;
+    protected $nomicEmbeddingService;
     
-    public function __construct(EmbeddingService $embeddingService)
+    public function __construct(NomicEmbeddingService $embeddingService)
     {
-        $this->embeddingService = $embeddingService;
+        $this->nomicEmbeddingService = $embeddingService;
     }
     
     /**
@@ -24,14 +24,13 @@ class QueryService
      * @param string|null $category
      * @return string
      */
-    public function answerQuestion($question, $category = null)
+
+    public function answerQuestion($question,$embedding,$ModelAiProvider='nomic')
     {
-        // try {
-            // Generate embedding for the question
-            $embedding = $this->embeddingService->generateEmbedding($question);
+        try {
             
             // Find relevant documents
-            $relevantDocs = $this->findRelevantDocuments($embedding, $category);
+            $relevantDocs = $this->findRelevantDocuments($embedding);
             
             if (empty($relevantDocs)) {
                 return "I don't have information about that in my knowledge base. Please ask something related to the school documents that have been uploaded.";
@@ -39,7 +38,17 @@ class QueryService
             
             
             // Generate answer using LLM
-            return $this->generateAnswer($question, $relevantDocs);
+            // here depend of the model
+            switch ($ModelAiProvider){
+                case 'groq':
+                    return $this->generateAnswer($question, $relevantDocs);
+                case 'cohere':
+                    return $this->generateAnswer($question, $relevantDocs);
+                case 'openai':
+                    return $this->generateAnswer($question, $relevantDocs);
+                case 'nomic':
+                    return $this->nomicEmbeddingService->generate_Answer($question, $relevantDocs);
+            }
             // ============ Testing ============
             // $contents = [];
             // foreach ($relevantDocs as $doc) {
@@ -48,10 +57,10 @@ class QueryService
             // return implode("\n\n", $contents);
             // return $relevantDocs;
             // ============ Testing ============
-        // } catch (\Exception $e) {
-        //     Log::error("Error answering question: " . $e->getMessage());
-        //     return "I'm sorry, I encountered an error while processing your question. Please try again later.";
-        // }
+        } catch (\Exception $e) {
+            Log::error("Error answering question: " . $e->getMessage());
+            return "I'm sorry, I encountered an error while processing your question. Please try again later.";
+        }
     }
     
     /**
@@ -61,7 +70,7 @@ class QueryService
      * @param string|null $category
      * @return array
      */
-    private function findRelevantDocuments($embedding, $category = null)
+    private function findRelevantDocuments($embedding)
     {
         $limit = config('vectordb.top_k', 5);
         $threshold = config('vectordb.similarity_threshold', 0.7);
@@ -77,9 +86,7 @@ class QueryService
             ->join('documents', 'document_embeddings.document_id', '=', 'documents.id')
             ->where('documents.status', 'completed');
         
-        if ($category) {
-            $query->where('documents.category', $category);
-        }
+        
         
         $results = $query->orderByRaw("embedding <=> '$embedding'::vector")
             ->limit($limit)
@@ -146,16 +153,16 @@ private function generateAnswer($question, $relevantDocs)
     // Step 1: Build the context block from documents
     $context = "You have access to the following information from official school documents:\n\n";
 
-    // foreach ($relevantDocs as $doc) {
-    //     // Debugging: show document title and content in terminal
-    //     echo "-------- DOCUMENT DEBUG --------\n";
-    //     echo "Title: {$doc->title}\n";
-    //     echo "Content:\n{$doc->content}\n\n";
-    //     echo "--------------------------------\n";
+    foreach ($relevantDocs as $doc) {
+        // Debugging: show document title and content in terminal
+        // echo "-------- DOCUMENT DEBUG --------\n";
+        // echo "Title: {$doc->title}\n";
+        // echo "Content:\n{$doc->content}\n\n";
+        // echo "--------------------------------\n";
 
-    //     // Append to context
-    //     $context .= "Document: {$doc->content}\n";
-    // }
+        // Append to context
+        $context .= "Document: {$doc->content}\n";
+    }
 
     // Step 2: Prepare the refined system prompt
     $systemPrompt = <<<'EOT'

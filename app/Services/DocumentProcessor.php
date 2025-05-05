@@ -11,11 +11,11 @@ use Laravel\Embeddings\Splitters\Re;
 
 class DocumentProcessor
 {
-    protected $embeddingService;
+    protected $nomicEmbeddingService;
 
-    public function __construct(EmbeddingService $embeddingService)
+    public function __construct(NomicEmbeddingService $embeddingService )
     {
-        $this->embeddingService = $embeddingService;
+        $this->nomicEmbeddingService = $embeddingService;
     }
 
     /**
@@ -24,7 +24,7 @@ class DocumentProcessor
      * @param Document $document
      * @return int Number of chunks processed
      */
-    public function processDocument(Document $document)
+    public function processDocument($ModelAiProvider,Document $document)
     {
         // Extract text from the document
         $text = $this->extractText($document->filepath);
@@ -33,7 +33,7 @@ class DocumentProcessor
         $chunks = $this->chunkText($text);
         
         // Generate and store embeddings
-        $this->processChunks($document, $chunks);
+        $this->processChunks($ModelAiProvider,$document, $chunks);
         
         return count($chunks);
     }
@@ -122,11 +122,22 @@ class DocumentProcessor
     
 
 
-    private function processChunks(Document $document, array $chunks)
+    private function processChunks($ModelAiProvider,Document $document, array $chunks)
     {
         foreach ($chunks as $index => $chunk) {
             // Generate embedding for the chunk
-            $embedding = $this->embeddingService->generateEmbedding($chunk);
+            $embedding=null;
+            // here depend of the model
+            switch ($ModelAiProvider){
+                case 'groq':
+                    // return $this->generateAnswer($question, $relevantDocs);
+                case 'cohere':
+                    // return $this->generateAnswer($question, $relevantDocs);
+                case 'openai':
+                    // return $this->generateAnswer($question, $relevantDocs);
+                case 'nomic':
+                    $embedding = $this->nomicEmbeddingService->generate_Embedding($chunk);
+            }
 
             // Store the chunk and its embedding
             DocumentEmbedding::create([
@@ -148,7 +159,7 @@ class DocumentProcessor
     {
         foreach ($chunks as $index => $chunk) {
             // Generate embedding for the chunk
-            $embedding = $this->embeddingService->generateEmbedding($chunk);
+            $embedding = $this->nomicEmbeddingService->generate_Embedding($chunk);
             
             // Store the chunk and its embedding
             DocumentEmbedding::create([

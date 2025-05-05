@@ -1,7 +1,10 @@
 <?php
+
 namespace App\Jobs;
+
 use App\Models\Document;
 use App\Services\DocumentProcessor;
+use Dotenv\Util\Str;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -15,6 +18,7 @@ class ProcessDocumentJob implements ShouldQueue
 
     protected $document;
     public $timeout = 3600; // 1 hour max processing time
+    protected $ModelAiProvider;
 
     /**
      * Create a new job instance.
@@ -22,9 +26,10 @@ class ProcessDocumentJob implements ShouldQueue
      * @param Document $document
      * @return void
      */
-    public function __construct(Document $document)
+    public function __construct(Document $document,string  $ModelAiProvider)
     {
         $this->document = $document;
+        $this->ModelAiProvider = $ModelAiProvider;
     }
 
     /**
@@ -37,15 +42,15 @@ class ProcessDocumentJob implements ShouldQueue
     {
         try {
             $this->document->update(['status' => 'processing']);
-            
-            $chunkCount = $documentProcessor->processDocument($this->document);
-            
+
+            $chunkCount = $documentProcessor->processDocument($this->ModelAiProvider, $this->document);
+
             $this->document->update([
                 'status' => 'completed',
                 'chunk_count' => $chunkCount,
                 'processed_at' => now()
             ]);
-            
+
             Log::info("Document {$this->document->id} processed successfully with {$chunkCount} chunks");
         } catch (\Exception $e) {
             $this->document->update(['status' => 'failed']);

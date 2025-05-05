@@ -7,20 +7,24 @@ use App\Jobs\ProcessDocumentJob;
 use App\Models\Document;
 use App\Models\DocumentEmbedding;
 use App\Services\DocumentProcessor;
+use App\Services\GenerateEmbedding;
+use App\Services\NomicEmbeddingService;
 use App\Services\QueryService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
-
+use App\Services\aiModels\NomicAiModelParams;
 class SchoolAssistantController extends Controller
 {
     protected $documentProcessor;
     protected $queryService;
+    protected $nomicEmbeddingService;
     
-    public function __construct(DocumentProcessor $documentProcessor, QueryService $queryService)
+    public function __construct(DocumentProcessor $documentProcessor, QueryService $queryService,NomicEmbeddingService $nomicEmbeddingService)
     {
         $this->documentProcessor = $documentProcessor;
         $this->queryService = $queryService;
+        $this->nomicEmbeddingService = $nomicEmbeddingService;
     }
     
     /**
@@ -34,7 +38,7 @@ class SchoolAssistantController extends Controller
     /**
      * Upload and process a new document
      */
-    public function uploadDocument(Request $request)
+    public function uploadDocument(Request $request , $ModelAiProvider='nomic')
     {
         $request->validate([
             'document' => 'required|file|mimes:pdf,doc,docx,txt|max:10240',
@@ -54,7 +58,7 @@ class SchoolAssistantController extends Controller
         ]);
         
         // Process the document in the background
-        ProcessDocumentJob::dispatch($document);
+        ProcessDocumentJob::dispatch($document,$ModelAiProvider);
         
         return response()->json([
             'message' => 'Document uploaded and is being processed',
@@ -65,12 +69,34 @@ class SchoolAssistantController extends Controller
     /**
      * Ask a question to the assistant
      */
-    public function askQuestion(QuestionRequest $request)
+    public function askQuestion(QuestionRequest $request,$ModelAiProvider='nomic')
+     
     {
-        $answer = $this->queryService->answerQuestion(
-            $request->question,
-            $request->category ?? null
-        );
+
+           // get question
+       $question =  $request->question;
+       // make generate embedding for question
+       // make generate answer for question
+       // decide which model to use
+        switch ($ModelAiProvider){
+            case 'groq':
+                $questionEmbedding = $this->nomicEmbeddingService->generate_Embedding($question,'nomic');
+                break;
+            case 'cohere':
+                $questionEmbedding = $this->nomicEmbeddingService->generate_Embedding($question,'nomic');
+                break;
+            case 'openai':
+                $questionEmbedding = $this->nomicEmbeddingService->generate_Embedding($question,'nomic');
+                break;
+            case 'nomic':
+                $questionEmbedding = $this->nomicEmbeddingService->generate_Embedding($question,null,NomicAiModelParams::TASK_TYPE_SEARCH_QUERY);
+
+            default:
+                $questionEmbedding = $this->nomicEmbeddingService->generate_Embedding($question,NomicAiModelParams::EMBEDDING_TEMPRETURE_V1_5,NomicAiModelParams::TASK_TYPE_SEARCH_QUERY,NomicAiModelParams::EMBED_DIM_V1_5,NomicAiModelParams::TEXT_TEMPRETURE_V1_5,NomicAiModelParams::MAX_TOKENS_V1_5);
+                break;
+        }
+
+        $answer = $this->nomicEmbeddingService->generate_Answer($question,$questionEmbedding);
         
         return response()->json([
             'question' => $request->question,
