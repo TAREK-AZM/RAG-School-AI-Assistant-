@@ -12,10 +12,12 @@ use Laravel\Embeddings\Splitters\Re;
 class DocumentProcessor
 {
     protected $nomicEmbeddingService;
+    protected $geminiEmbeddingService;
 
-    public function __construct(NomicEmbeddingService $embeddingService )
+    public function __construct(NomicEmbeddingService $embeddingService, GeminiEmbeddingService $geminiEmbeddingService)
     {
         $this->nomicEmbeddingService = $embeddingService;
+        $this->geminiEmbeddingService = $geminiEmbeddingService;
     }
 
     /**
@@ -133,9 +135,9 @@ class DocumentProcessor
                     // return $this->generateAnswer($question, $relevantDocs);
                 case 'cohere':
                     // return $this->generateAnswer($question, $relevantDocs);
-                case 'openai':
-                    // return $this->generateAnswer($question, $relevantDocs);
-                case 'nomic':
+                case 'gemini':
+                    return $this->geminiEmbeddingService->generate_Embedding($chunk);
+                default: // nomic
                     $embedding = $this->nomicEmbeddingService->generate_Embedding($chunk);
             }
 

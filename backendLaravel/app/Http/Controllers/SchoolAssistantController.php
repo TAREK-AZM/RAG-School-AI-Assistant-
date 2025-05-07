@@ -6,10 +6,11 @@ use App\Http\Requests\QuestionRequest;
 use App\Jobs\ProcessDocumentJob;
 use App\Models\Document;
 use App\Models\DocumentEmbedding;
+use App\Services\aiModels\GeminiAiModelParams;
 use App\Services\DocumentProcessor;
-use App\Services\GenerateEmbedding;
 use App\Services\NomicEmbeddingService;
-use App\Services\QueryService;
+use App\Services\GeminiEmbeddingService;
+use App\Services\QueryAnswerService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -17,14 +18,22 @@ use App\Services\aiModels\NomicAiModelParams;
 class SchoolAssistantController extends Controller
 {
     protected $documentProcessor;
-    protected $queryService;
+    protected $queryAnswerService;
     protected $nomicEmbeddingService;
+    protected $geminiEmbeddingService;
     
-    public function __construct(DocumentProcessor $documentProcessor, QueryService $queryService,NomicEmbeddingService $nomicEmbeddingService)
+    public function __construct(
+        DocumentProcessor $documentProcessor, 
+        QueryAnswerService $queryService,
+        NomicEmbeddingService $nomicEmbeddingService,
+        GeminiEmbeddingService $geminiEmbeddingService
+    
+    )
     {
         $this->documentProcessor = $documentProcessor;
-        $this->queryService = $queryService;
+        $this->queryAnswerService = $queryService;
         $this->nomicEmbeddingService = $nomicEmbeddingService;
+        $this->geminiEmbeddingService = $geminiEmbeddingService;
     }
     
     /**
@@ -36,7 +45,7 @@ class SchoolAssistantController extends Controller
     }
     
     /**
-     * Upload and process a new document
+     * Upload and process a new document after
      */
     public function uploadDocument(Request $request , $ModelAiProvider='nomic')
     {
@@ -57,19 +66,21 @@ class SchoolAssistantController extends Controller
             // 'uploaded_by' => 123 ,// Auth::id()
         ]);
         
-        // Process the document in the background
-        ProcessDocumentJob::dispatch($document,$ModelAiProvider);
-        
+        // Process the document in the background but i don't what process the documnet by laravel
+        // i want process the document by python FastAPI service
+            ProcessDocumentJob::dispatch($document,$ModelAiProvider);
+
         return response()->json([
             'message' => 'Document uploaded and is being processed',
             'document' => $document
         ]);
     }
     
+
     /**
      * Ask a question to the assistant
      */
-    public function askQuestion(QuestionRequest $request,$ModelAiProvider='nomic')
+    public function askQuestion(QuestionRequest $request,$ModelAiProvider='gemini')
      
     {
 
@@ -80,27 +91,33 @@ class SchoolAssistantController extends Controller
        // decide which model to use
         switch ($ModelAiProvider){
             case 'groq':
-                $questionEmbedding = $this->nomicEmbeddingService->generate_Embedding($question,'nomic');
+                // $questionEmbedding = $this->nomicEmbeddingService->generate_Embedding($question,'nomic');
                 break;
             case 'cohere':
-                $questionEmbedding = $this->nomicEmbeddingService->generate_Embedding($question,'nomic');
+                // $questionEmbedding = $this->nomicEmbeddingService->generate_Embedding($question,'nomic');
                 break;
             case 'openai':
-                $questionEmbedding = $this->nomicEmbeddingService->generate_Embedding($question,'nomic');
+                // $questionEmbedding = $this->nomicEmbeddingService->generate_Embedding($question,'nomic');
                 break;
-            case 'nomic':
-                $questionEmbedding = $this->nomicEmbeddingService->generate_Embedding($question,null,NomicAiModelParams::TASK_TYPE_SEARCH_QUERY);
+            case 'gemini':
+                $questionEmbedding = $this->geminiEmbeddingService->generate_Embedding($question,null,GeminiAiModelParams::TASK_TYPE_RETRIEVAL_QUERY);
 
             default:
                 $questionEmbedding = $this->nomicEmbeddingService->generate_Embedding($question,NomicAiModelParams::EMBEDDING_TEMPRETURE_V1_5,NomicAiModelParams::TASK_TYPE_SEARCH_QUERY,NomicAiModelParams::EMBED_DIM_V1_5,NomicAiModelParams::TEXT_TEMPRETURE_V1_5,NomicAiModelParams::MAX_TOKENS_V1_5);
                 break;
         }
 
-        $answer = $this->nomicEmbeddingService->generate_Answer($question,$questionEmbedding);
-        
+        // $answer = $this->nomicEmbeddingService->generate_Answer($question,$questionEmbedding);
+        if($questionEmbedding != null){
+            return response()->json([
+                'question' => $request->question,
+                'answer' => "the embedding sucessfully generated"
+            ]);
+        }
+
         return response()->json([
             'question' => $request->question,
-            'answer' => $answer
+            'answer' => "the embedding not sucessfully generated"
         ]);
     }
     

@@ -5,59 +5,11 @@ namespace App\Services;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cache;
 use App\Services\aiModels\NomicAiModelParams;
+USE App\Services\promts\AnswerPromts;
 
 class NomicEmbeddingService implements AIServiceInterface
 {
-    /**
-     * Generate embedding for a text using Nomic Embed API
-     *
-     * @param string $text
-     * @return string JSON encoded embedding vector
-     * @throws \Exception
-     */
-
-
-
-
-    //  public function generateEmbedding(string $text,
-    //                                   string $taskType = 'search_document',
-    //                                   int    $dim      = 768): string
-    // {
-    //     // 1️⃣  Build a unique cache key that encodes embedding “flavor”
-    //     $cacheKey = "embedding_{$taskType}_{$dim}_" . md5($text);
-
-    //     // // 2️⃣  If we already have that vector in Laravel’s cache…
-    //     // if (Cache::has($cacheKey)) {
-
-    //     //     // 3️⃣  …return it immediately and skip the Nomic API call.
-    //     //     return Cache::get($cacheKey);
-    //     // }
-
-    //     // Nomic API payload
-    //     $payload = [
-    //         'texts'     => [$text],
-    //         'model'     => 'nomic-embed-text-v1.5',
-    //         'task_type' => $taskType,           //  <-- critical switch
-    //         'dim'       => $dim,               // 256/512 recommended
-    //     ];
-
-    //     $response = Http::withHeaders([
-    //         'Authorization' => 'Bearer ' . config('services.nomic.api_key'),
-    //         'Content-Type'  => 'application/json',
-    //     ])->post('https://api-atlas.nomic.ai/v1/embedding/text', $payload);
-
-    //     if (!$response->successful()) {
-    //         throw new \Exception('Nomic API error: ' . $response->body());
-    //     }
-
-    //     $embedding = $response->json()['embeddings'][0];   // array of floats
-    //     $formatted = '[' . implode(',', $embedding) . ']'; // PGvector literal
-
-    //     Cache::put($cacheKey, $formatted, now()->addDays(30));
-
-    //     return $formatted;
-    // }
-
+   
 
     public function generate_Answer($Text, $questionEmbedding)
     {
@@ -77,12 +29,7 @@ class NomicEmbeddingService implements AIServiceInterface
         }
 
         // Step 2: Prepare the refined system prompt
-        $systemPrompt = <<<'EOT'
-    You are a helpful academic assistant for students interested in engineering schools.
-    Only answer using the content provided in the documents.
-    If the answer cannot be found in the context, say: "I don't have enough information to answer that."
-    Avoid phrases like "Based on the provided context" or "From the documents" — just answer clearly and naturally as if speaking to a student.
-    EOT;
+        $systemPrompt = AnswerPromts::NOMIC_PROMT_ANSWER_QUESTION;
 
         // Step 3: Call the LLM API (Groq in this case)
         $response = Http::withHeaders([
@@ -97,7 +44,7 @@ class NomicEmbeddingService implements AIServiceInterface
                 ],
                 [
                     'role' => 'user',
-                    'content' => $context . "\n\nQuestion: " . $Text
+                    'content' => "Question: " . $Text ."\n\n "."Context: \n\n".  $context 
                 ]
             ],
             'temperature' => 0.3,
@@ -117,7 +64,7 @@ class NomicEmbeddingService implements AIServiceInterface
 
 
 
-    public function generate_Embedding($Text, $eEmbeddingModel = NomicAiModelParams::EMBEDDING_MODEL_V1_5, $TaskType = NomicAiModelParams::TASK_TYPE_SEARCH_DOCUMENT, $Dimention = NomicAiModelParams::EMBED_DIM_V1_5, $temperature = NomicAiModelParams::TEXT_TEMPRETURE_V1_5, $max_tokens = NomicAiModelParams::MAX_TOKENS_V1_5)
+    public function generate_Embedding( string $Text, string $eEmbeddingModel = NomicAiModelParams::EMBEDDING_MODEL_V1_5,string  $TaskType = NomicAiModelParams::TASK_TYPE_SEARCH_DOCUMENT,int $Dimention = NomicAiModelParams::EMBED_DIM_V1_5,float $temperature = NomicAiModelParams::TEXT_TEMPRETURE_V1_5,int  $max_tokens = NomicAiModelParams::MAX_TOKENS_V1_5)
     {
         // 1️⃣  Build a unique cache key that encodes embedding “flavor”
         $cacheKey = "embedding_{$TaskType}_{$Dimention}_" . md5($Text);

@@ -36,10 +36,14 @@ return [
     'api_key' => env('GROQ_API_KEY'),
     'model' => env('GROQ_MODEL', 'llama-3.3-70b-versatile'),
 
-],
-'nomic' => [
+    ]
+    ,
+    'nomic' => [
     'api_key' => env('NOMIC_API_KEY'),
-],
+    ],
+    'gemini' => [
+    'api_key' => env('GEMINI_API_KEY'),
+    ],
 
 
 ];

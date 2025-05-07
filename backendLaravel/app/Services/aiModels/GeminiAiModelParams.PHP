@@ -13,7 +13,7 @@ class GeminiAiModelParams
     /* ─────────────── Chat / generation models ─────────────── */
     // (The public chat models are still named “gemini‑pro” & “gemini‑flash”;
     // only embeddings use the “gemini‑embedding‑…” naming scheme.)
-    public const CHAT_MODEL_PRO                  = 'gemini-pro';
+    public const   CHAT_MODEL_PRO                  = 'gemini-pro';
     public const CHAT_MODEL_FLASH                = 'gemini-pro-vision';  // multimodal
 
     /* ─────────────── Embedding models ─────────────── */
@@ -32,13 +32,17 @@ class GeminiAiModelParams
     public const TASK_TYPE_QUESTION_ANSWERING         = 'QUESTION_ANSWERING';
     public const TASK_TYPE__VERIFICATION              = 'FACT_VERIFICATION';
     // Code‑specific
-    public const TASK_CODE_RETRIEVAL_QUERY       = 'CODE_RETRIEVAL_QUERY';
+    public const TASK_TYPE_CODE_RETRIEVAL_QUERY       = 'CODE_RETRIEVAL_QUERY';
 
     /* ─────────────── Suggested defaults ─────────────── */
     // Chat (generation) hyper‑parameters
-    public const CHAT_TEMPERATURE_DEFAULT        = 0.3;
-    public const CHAT_MAX_TOKENS_DEFAULT         = 512;
+    public const TEXT_TEMPERATURE_DEFAULT        = 0.3;
+    public const TEXT_MAX_TOKENS_DEFAULT         = 512;
 
     // The experimental embedding model returns 768‑D floats.
-    public const EMBED_DIM_EXP_03_07             = 768;
+    public const EMBED_DIM_EXP_03_07_768             = 768;
+
+    public const MAX_TOKENS_V_500 = 500;
+    public const MAX_TOKENS_V_300 = 300;
+    public const MAX_TOKENS_V_100 = 100;
 }
