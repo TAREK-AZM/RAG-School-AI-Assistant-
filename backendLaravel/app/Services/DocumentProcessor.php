@@ -13,11 +13,16 @@ class DocumentProcessor
 {
     protected $nomicEmbeddingService;
     protected $geminiEmbeddingService;
-
-    public function __construct(NomicEmbeddingService $embeddingService, GeminiEmbeddingService $geminiEmbeddingService)
+    protected $cohereEmbeddingService;
+    public function __construct(
+        NomicEmbeddingService $embeddingService, 
+        GeminiEmbeddingService $geminiEmbeddingService,
+        CohereEmbeddingService $cohereEmbeddingService
+    )
     {
         $this->nomicEmbeddingService = $embeddingService;
         $this->geminiEmbeddingService = $geminiEmbeddingService;
+        $this->cohereEmbeddingService = $cohereEmbeddingService;
     }
 
     /**
@@ -135,22 +140,27 @@ class DocumentProcessor
                     // return $this->generateAnswer($question, $relevantDocs);
                     break;
                 case 'cohere':
-                    // return $this->generateAnswer($question, $relevantDocs);
+                    $embedding =  $this->cohereEmbeddingService->generate_Embedding($chunk);
                     break;
                 case 'gemini':
-                    return $this->geminiEmbeddingService->generate_Embedding($chunk);
+                    $embedding =  $this->geminiEmbeddingService->generate_Embedding($chunk);
                     break;
                 default: // nomic
                     $embedding = $this->nomicEmbeddingService->generate_Embedding($chunk);
                     break;
             }
+            // $embedding_values = is_array($embedding["values"]) ? implode(',', $embedding["values"]) : $embedding["values"];
             
+            if($ModelAiProvider == 'gemini'){   
+                $embedding_values = '[' . implode(',', $embedding["values"]) . ']';
+            }
+            $embedding_values = $embedding;
 
             // Store the chunk and its embedding
             DocumentEmbedding::create([
                 'document_id' => $document->id,
                 'content' => $chunk,
-                'embedding' => DB::raw("'{$embedding}'::vector"), // Use DB::raw() for vector literal
+                'embedding' => DB::raw("'{$embedding_values}'::vector"), // Use DB::raw() for vector literal
                 'chunk_index' => $index,
             ]);
         }

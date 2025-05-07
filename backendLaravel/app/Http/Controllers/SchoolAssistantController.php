@@ -9,6 +9,7 @@ use App\Models\DocumentEmbedding;
 use App\Services\DocumentProcessor;
 use App\Services\NomicEmbeddingService;
 use App\Services\GeminiEmbeddingService;
+use App\Services\CohereEmbeddingService;
 use App\Services\QueryAnswerService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -16,18 +17,21 @@ use Illuminate\Support\Facades\Storage;
 
 use App\Services\AiModelsProdviders\GeminiAiModelParams;
 use App\Services\AiModelsProdviders\NomicAiModelParams;
+use App\Services\AiModelsProdviders\CohereAiModelParams;
 class SchoolAssistantController extends Controller
 {
     protected $documentProcessor;
     protected $queryAnswerService;
     protected $nomicEmbeddingService;
     protected $geminiEmbeddingService;
+    protected $cohereEmbeddingService;
     
     public function __construct(
         DocumentProcessor $documentProcessor, 
         QueryAnswerService $queryService,
         NomicEmbeddingService $nomicEmbeddingService,
-        GeminiEmbeddingService $geminiEmbeddingService
+        GeminiEmbeddingService $geminiEmbeddingService,
+        CohereEmbeddingService $cohereEmbeddingService
     
     )
     {
@@ -35,6 +39,7 @@ class SchoolAssistantController extends Controller
         $this->queryAnswerService = $queryService;
         $this->nomicEmbeddingService = $nomicEmbeddingService;
         $this->geminiEmbeddingService = $geminiEmbeddingService;
+        $this->cohereEmbeddingService = $cohereEmbeddingService;
     }
     
     /**
@@ -48,7 +53,7 @@ class SchoolAssistantController extends Controller
     /**
      * Upload and process a new document after
      */
-    public function uploadDocument(Request $request , $ModelAiProvider='gemini')
+    public function uploadDocument(Request $request , $ModelAiProvider='cohere')
     {
         $request->validate([
             'document' => 'required|file|mimes:pdf,doc,docx,txt|max:10240',
@@ -81,7 +86,7 @@ class SchoolAssistantController extends Controller
     /**
      * Ask a question to the assistant
      */
-    public function askQuestion(QuestionRequest $request,$ModelAiProvider='gemini')
+    public function askQuestion(QuestionRequest $request,$ModelAiProvider='cohere')
      
     {
 
@@ -95,7 +100,7 @@ class SchoolAssistantController extends Controller
                 // $questionEmbedding = $this->nomicEmbeddingService->generate_Embedding($question,'nomic');
                 break;
             case 'cohere':
-                // $questionEmbedding = $this->nomicEmbeddingService->generate_Embedding($question,'nomic');
+                $questionEmbedding = $this->cohereEmbeddingService->generate_Embedding($question,TaskType:CohereAiModelParams::TASK_TYPE_SEARCH_QUERY);
                 break;
             case 'openai':
                 // $questionEmbedding = $this->nomicEmbeddingService->generate_Embedding($question,'nomic');
@@ -109,19 +114,11 @@ class SchoolAssistantController extends Controller
         }
 
         // $answer = $this->nomicEmbeddingService->generate_Answer($question,$questionEmbedding);
-        $embeddedSize = count($questionEmbedding["values"]);  
-
-        if($questionEmbedding != null){
-            return response()->json([
-                'question' => $request->question,
-                'embeddedSize' => $embeddedSize,
-                'answer' => $questionEmbedding["values"]
-            ]);
-        }
+       
 
         return response()->json([
             'question' => $request->question,
-            'answer' => "the embedding not sucessfully generated"
+            'answer' => $questionEmbedding
         ]);
     }
     

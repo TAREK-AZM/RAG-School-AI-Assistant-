@@ -4,7 +4,6 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cache;
-use App\Services\AiModelsProdviders\NomicAiModelParams;
 use App\Services\AiModelsProdviders\GeminiAiModelParams;
 USE App\Services\promts\AnswerPromts;
 
@@ -71,10 +70,10 @@ class GeminiEmbeddingService implements AIServiceInterface
         // Build a unique cache key
         $cacheKey = "gemini_embedding_{$TaskType}_{$Dimention}_" . md5($Text);
         
-        // // Check cache first
-        // if (Cache::has($cacheKey)) {
-        //     return Cache::get($cacheKey);
-        // }
+        // Check cache first
+        if (Cache::has($cacheKey)) {
+            return Cache::get($cacheKey);
+        }
         
         // Prepare the API request
         $url = "https://generativelanguage.googleapis.com/v1beta/models/{$EmbeddingModel}:embedContent?key=" 
@@ -98,12 +97,13 @@ class GeminiEmbeddingService implements AIServiceInterface
             throw new \Exception('Gemini API error: ' . $response->body());
         }
         
-        $embedding = $response->json()['embedding'];
-        
+        $embedding = $response->json()['embedding']["values"];
+        $formatted = '[' . implode(',', $embedding) . ']'; // PGvector literal
+
         // Cache the result for 30 days
-        // Cache::put($cacheKey, $embedding, now()->addDays(30));
+        Cache::put($cacheKey, $formatted, now()->addDays(30));
         
-        return $embedding;
+        return $formatted;
     }
 
     public function generate_Text(

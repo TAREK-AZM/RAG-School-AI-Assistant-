@@ -3,80 +3,63 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cache;
+use App\Services\AiModelsProdviders\CohereAiModelParams;
+use App\Services\AIServiceInterface;
 
-class CohereEmbeddingService
+class CohereEmbeddingService implements AIServiceInterface
 {
-    /**
-     * Generate an embedding (float, int8, etc.) via Cohere v2 API.
-     *
-     * @param  string $text          The text (or image data URI) to embed.
-     * @param  string $role          'search_document' | 'search_query' | 'classification' | 'clustering'
-     * @param  int    $dim           256 | 512 | 1024 | 1536   (v4+ models only)
-     * @param  array  $types         ['float'] or ['float','int8'] … up to five
-     * @param  string $model         Default: embed-multilingual-v3.0
-     * @return array                 ['float' => '[…, …]', 'int8' => '[…]', …]
-     * @throws \Exception
-     */
-    public function embed(
-        string $text,
-        string $role   = 'search_document',
-        int    $dim    = 768,
-        array  $types  = ['float'],
-        string $model  = 'embed-multilingual-v3.0'
-    ): array {
-        // ---------- build cache key ----------
-        $cacheKey = "cohere_{$model}_{$role}_{$dim}_" . md5($text);
+    
 
-        if (Cache::has($cacheKey)) {
-            return Cache::get($cacheKey);
-        }
+    public function generate_Answer($question,$questionEmbedding,$ModelAiProvider='cohere'){}
 
-        // ---------- request payload ----------
-        $payload = [
-            'model'          => $model,
-            'input_type'     => $role,
-            'embedding_types'=> $types,
-            'texts'          => [$text],
-        ];
 
-        // output_dimension is only valid for v4+ models
-        if ($dim !== 1536 && str_contains($model, 'embed-v4')) {
-            $payload['output_dimension'] = $dim;
-        }
+    public function generate_Embedding(
+        $Text,
+        $EmbeddingModel = CohereAiModelParams::EMBEDDING_MODEL_MULTI_V3,
+        $TaskType = CohereAiModelParams::TASK_TYPE_SEARCH_DOCUMENT,
+        $Dimention = CohereAiModelParams::EMBED_DIM_V4_DEFAULT_768,
+        $temperature = CohereAiModelParams::CHAT_TEMPERATURE_DEFAULT,
+        $max_tokens = CohereAiModelParams::CHAT_MAX_TOKENS_DEFAULT,
+        $EmbeddingType = CohereAiModelParams::EMBED_TYPE_FLOAT
+        ){
 
-        $res = Http::withHeaders([
-            'Authorization' => 'Bearer '.config('services.cohere.api_key'),
-            'Content-Type'  => 'application/json',
-        ])->post('https://api.cohere.com/v2/embed', $payload);
+            $cacheKey = "cohere_{$EmbeddingModel}_{$TaskType}_{$Dimention}_" . md5($Text);
 
-        if (!$res->successful()) {
-            throw new \Exception('Cohere API error: '.$res->body());
-        }
+            if (Cache::has($cacheKey)) {
+                return Cache::get($cacheKey);
+            }
 
-        // ---------- format for pgvector ----------
-        $data = $res->json()['embeddings']; // { float: [[…]], int8: [[…]], … }
+            $payload = [
+                'model'          => $EmbeddingModel,
+                'input_type'     => $TaskType,
+                'embedding_types'=> [$EmbeddingType],
+                'texts'          => [$Text],
+                // 'temperature'    => $temperature,
+                // 'max_tokens'     => $max_tokens,
+            ];
 
-        $out = [];
-        foreach ($data as $t => $vecs) {
-            $out[$t] = '['.implode(',', $vecs[0]).']';   // first (and only) item
-        }
+            $res = Http::withHeaders([
+                'Authorization' => 'Bearer ' . config('services.cohere.api_key'),
+                'Content-Type'  => 'application/json',
+            ])->post('https://api.cohere.com/v2/embed', $payload);
 
-        Cache::put($cacheKey, $out, now()->addDays(30));
-        return $out;
+            if (!$res->successful()) {
+                throw new \Exception('Cohere API error: ' . $res->body());
+            }
+
+            $embedding = $res->json()['embeddings']["float"]; // array of floats
+            $formatted = '[' . implode(',',$embedding[0] ) . ']'; // PGvector literal
+
+            Cache::put($cacheKey, $formatted, now()->addDays(30));
+
+            return $formatted;
+           
     }
 
 
-
-    // $svc = app()->make(\App\Services\CohereEmbeddingService::class);
-
-    // // chunk embedding
-    // $docVecs = $svc->embed($chunkText, 'search_document', 768, ['float']);
     
-    // // query embedding
-    // $qVecs   = $svc->embed($userQuestion, 'search_query', 768, ['float']);
-    // $qFloat  = $qVecs['float'];          // store / search with this literal
     
-
+        public function generate_Text($Text, $EmbeddingModel, $TaskType, $Dimention, $temperature, $max_tokens){}
 
 
 

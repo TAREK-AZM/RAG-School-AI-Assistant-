@@ -44,6 +44,8 @@ return [
     'gemini' => [
     'api_key' => env('GEMINI_API_KEY'),
     ],
-
+    'cohere' => [
+        'api_key' => env('COHERE_API_KEY'),
+    ],
 
 ];

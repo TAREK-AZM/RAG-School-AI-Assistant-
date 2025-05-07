@@ -20,14 +20,14 @@ class CohereAiModelParams
     /* ---------- Default generation hyper‑params ---------- */
     public const CHAT_TEMPERATURE_DEFAULT   = 0.3;
     public const CHAT_TOP_P_DEFAULT         = 0.95;
-    public const CHAT_MAX_TOKENS_DEFAULT    = 512;
+    public const CHAT_MAX_TOKENS_DEFAULT    = 500;
 
     /* ---------- Embedding defaults ---------- */
     // v3 models always return 1024‑D vectors.
     public const EMBED_DIM_V3               = 1024;
 
     // v4 allows 256 | 512 | 1024 | 1536  – pick one:
-    public const EMBED_DIM_V4_DEFAULT       = 768;
+    public const EMBED_DIM_V4_DEFAULT_768       = 768;
 
     /* ---------- Cohere input‑type enum ---------- */
     public const TASK_TYPE_SEARCH_DOCUMENT = 'search_document';
