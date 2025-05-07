@@ -4,8 +4,8 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cache;
-use App\Services\aiModels\NomicAiModelParams;
-use App\Services\aiModels\GeminiAiModelParams;
+use App\Services\AiModelsProdviders\NomicAiModelParams;
+use App\Services\AiModelsProdviders\GeminiAiModelParams;
 USE App\Services\promts\AnswerPromts;
 
 class GeminiEmbeddingService implements AIServiceInterface
@@ -60,7 +60,13 @@ class GeminiEmbeddingService implements AIServiceInterface
 
 
 
-    public function generate_Embedding($Text, $EmbeddingModel = GeminiAiModelParams::EMBEDDING_MODEL_EXP_03_07, $TaskType = GeminiAiModelParams::TASK_TYPE_RETRIEVAL_DOCUMENT, $Dimention = GeminiAiModelParams::EMBED_DIM_EXP_03_07_768, $temperature = GeminiAiModelParams::TEXT_TEMPERATURE_DEFAULT, $max_tokens = GeminiAiModelParams::MAX_TOKENS_V_500)
+    public function generate_Embedding(
+        $Text,
+        $EmbeddingModel = GeminiAiModelParams::EMBEDDING_MODEL_EXP_03_07, 
+        $TaskType = GeminiAiModelParams::TASK_TYPE_RETRIEVAL_DOCUMENT,  
+        $Dimention = GeminiAiModelParams::EMBED_DIM_EXP_03_07_768, 
+        $temperature = GeminiAiModelParams::TEXT_TEMPERATURE_DEFAULT, 
+        $max_tokens = GeminiAiModelParams::MAX_TOKENS_V_500)
      {
         // Build a unique cache key
         $cacheKey = "gemini_embedding_{$TaskType}_{$Dimention}_" . md5($Text);
@@ -80,7 +86,8 @@ class GeminiEmbeddingService implements AIServiceInterface
                     ['text' => $Text]
                 ]
             ],
-            'taskType' => $TaskType
+            'taskType' => $TaskType,
+            'outputDimensionality' => $Dimention
         ];
         
         $response = Http::withHeaders([
@@ -99,7 +106,16 @@ class GeminiEmbeddingService implements AIServiceInterface
         return $embedding;
     }
 
-    public function generate_Text($Text, $EmbeddingModel, $TaskType, $Dimention, $temperature, $max_tokens) {}
+    public function generate_Text(
+        $Text,
+        $EmbeddingModel,
+        $TaskType,
+        $Dimention,
+        $temperature, 
+        $max_tokens) 
+    {
+
+    }
 
 
 

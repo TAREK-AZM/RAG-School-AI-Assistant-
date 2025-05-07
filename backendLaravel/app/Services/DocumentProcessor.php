@@ -133,13 +133,18 @@ class DocumentProcessor
             switch ($ModelAiProvider){
                 case 'groq':
                     // return $this->generateAnswer($question, $relevantDocs);
+                    break;
                 case 'cohere':
                     // return $this->generateAnswer($question, $relevantDocs);
+                    break;
                 case 'gemini':
                     return $this->geminiEmbeddingService->generate_Embedding($chunk);
+                    break;
                 default: // nomic
                     $embedding = $this->nomicEmbeddingService->generate_Embedding($chunk);
+                    break;
             }
+            
 
             // Store the chunk and its embedding
             DocumentEmbedding::create([
@@ -150,29 +155,7 @@ class DocumentProcessor
             ]);
         }
     }
-    /**
-     * Process chunks and create embeddings
-     *
-     * @param Document $document
-     * @param array $chunks
-     * @return void
-     */
-    private function processChunks_1(Document $document, array $chunks)
-    {
-        foreach ($chunks as $index => $chunk) {
-            // Generate embedding for the chunk
-            $embedding = $this->nomicEmbeddingService->generate_Embedding($chunk);
-            
-            // Store the chunk and its embedding
-            DocumentEmbedding::create([
-                'document_id' => $document->id,
-                'content' => $chunk,
-                'embedding' => $embedding,
-                'chunk_index' => $index,
-            ]);
-        }
-    }
-
+    
     
 }
 

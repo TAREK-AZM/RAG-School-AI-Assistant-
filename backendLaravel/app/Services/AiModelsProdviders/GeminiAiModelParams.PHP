@@ -1,6 +1,5 @@
 <?php
-
-namespace App\Services\aiModels;
+namespace App\Services\AiModelsProdviders;
 
 /**
  * Canonical constants for **Google Gemini** chat‑ and embedding‑models plus the

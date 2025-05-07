@@ -1,5 +1,5 @@
 <?php
-namespace App\Services\aiModels;
+namespace App\Services\AiModelsProdviders;
 
 class GroqAiModelParams{
 

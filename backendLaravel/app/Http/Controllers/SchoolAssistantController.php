@@ -6,7 +6,6 @@ use App\Http\Requests\QuestionRequest;
 use App\Jobs\ProcessDocumentJob;
 use App\Models\Document;
 use App\Models\DocumentEmbedding;
-use App\Services\aiModels\GeminiAiModelParams;
 use App\Services\DocumentProcessor;
 use App\Services\NomicEmbeddingService;
 use App\Services\GeminiEmbeddingService;
@@ -14,7 +13,9 @@ use App\Services\QueryAnswerService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
-use App\Services\aiModels\NomicAiModelParams;
+
+use App\Services\AiModelsProdviders\GeminiAiModelParams;
+use App\Services\AiModelsProdviders\NomicAiModelParams;
 class SchoolAssistantController extends Controller
 {
     protected $documentProcessor;
@@ -47,7 +48,7 @@ class SchoolAssistantController extends Controller
     /**
      * Upload and process a new document after
      */
-    public function uploadDocument(Request $request , $ModelAiProvider='nomic')
+    public function uploadDocument(Request $request , $ModelAiProvider='gemini')
     {
         $request->validate([
             'document' => 'required|file|mimes:pdf,doc,docx,txt|max:10240',
@@ -100,18 +101,21 @@ class SchoolAssistantController extends Controller
                 // $questionEmbedding = $this->nomicEmbeddingService->generate_Embedding($question,'nomic');
                 break;
             case 'gemini':
-                $questionEmbedding = $this->geminiEmbeddingService->generate_Embedding($question,null,GeminiAiModelParams::TASK_TYPE_RETRIEVAL_QUERY);
-
+                $questionEmbedding = $this->geminiEmbeddingService->generate_Embedding($question,TaskType:GeminiAiModelParams::TASK_TYPE_RETRIEVAL_QUERY);
+                break;
             default:
-                $questionEmbedding = $this->nomicEmbeddingService->generate_Embedding($question,NomicAiModelParams::EMBEDDING_TEMPRETURE_V1_5,NomicAiModelParams::TASK_TYPE_SEARCH_QUERY,NomicAiModelParams::EMBED_DIM_V1_5,NomicAiModelParams::TEXT_TEMPRETURE_V1_5,NomicAiModelParams::MAX_TOKENS_V1_5);
+                $questionEmbedding = $this->nomicEmbeddingService->generate_Embedding($question,TaskType:NomicAiModelParams::TASK_TYPE_SEARCH_QUERY);
                 break;
         }
 
         // $answer = $this->nomicEmbeddingService->generate_Answer($question,$questionEmbedding);
+        $embeddedSize = count($questionEmbedding["values"]);  
+
         if($questionEmbedding != null){
             return response()->json([
                 'question' => $request->question,
-                'answer' => "the embedding sucessfully generated"
+                'embeddedSize' => $embeddedSize,
+                'answer' => $questionEmbedding["values"]
             ]);
         }
 

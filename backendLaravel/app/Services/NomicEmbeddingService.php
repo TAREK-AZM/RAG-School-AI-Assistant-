@@ -4,7 +4,7 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cache;
-use App\Services\aiModels\NomicAiModelParams;
+use App\Services\AiModelsProdviders\NomicAiModelParams;
 USE App\Services\promts\AnswerPromts;
 
 class NomicEmbeddingService implements AIServiceInterface
@@ -64,7 +64,13 @@ class NomicEmbeddingService implements AIServiceInterface
 
 
 
-    public function generate_Embedding( string $Text, string $eEmbeddingModel = NomicAiModelParams::EMBEDDING_MODEL_V1_5,string  $TaskType = NomicAiModelParams::TASK_TYPE_SEARCH_DOCUMENT,int $Dimention = NomicAiModelParams::EMBED_DIM_V1_5,float $temperature = NomicAiModelParams::TEXT_TEMPRETURE_V1_5,int  $max_tokens = NomicAiModelParams::MAX_TOKENS_V1_5)
+    public function generate_Embedding( 
+        string $Text, 
+        string $EmbeddingModel = NomicAiModelParams::EMBEDDING_MODEL_V1_5,
+        string  $TaskType = NomicAiModelParams::TASK_TYPE_SEARCH_DOCUMENT,
+        int $Dimention = NomicAiModelParams::EMBED_DIM_V1_5,
+        float $temperature = NomicAiModelParams::TEXT_TEMPRETURE_V1_5,
+        int  $max_tokens = NomicAiModelParams::MAX_TOKENS_V1_5)
     {
         // 1️⃣  Build a unique cache key that encodes embedding “flavor”
         $cacheKey = "embedding_{$TaskType}_{$Dimention}_" . md5($Text);
@@ -79,7 +85,7 @@ class NomicEmbeddingService implements AIServiceInterface
         // Nomic API payload
         $payload = [
             'texts'     => [$Text],
-            'model'     => 'nomic-embed-text-v1.5',
+            'model'     => $EmbeddingModel,
             'task_type' => $TaskType,           //  <-- critical switch
             'dim'       => $Dimention,               // 256/512 recommended
         ];

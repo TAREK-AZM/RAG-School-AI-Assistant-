@@ -1,5 +1,5 @@
 <?php
-namespace App\Services\aiModels;
+namespace App\Services\AiModelsProdviders;
 
 /**
  * Canonical list of Cohere‑hosted model names, default hyper‑parameters
