@@ -1,0 +1,99 @@
+import pandas as pd
+
+# Re-create the question list
+all_questions = [
+    # General Knowledge
+    "What is ENSA and how is it different from other engineering schools in Morocco?",
+    "How many ENSA campuses are there in Morocco?",
+    "Which is the oldest ENSA campus?",
+    "What is the main language of instruction at ENSA?",
+    "Is ENSA considered a prestigious engineering school?",
+    "Are ENSA diplomas recognized internationally?",
+    "What kind of engineering degrees does ENSA offer?",
+    "How long does the full ENSA program take?",
+    "What is the structure of the ENSA curriculum?",
+    "How is the ENSA network governed or managed?",
+    # Admission
+    "What are the admission requirements for ENSA?",
+    "Do I need a science background to apply to ENSA?",
+    "Is there an entrance exam for ENSA?",
+    "Can students apply to multiple ENSA campuses?",
+    "When is the application deadline for ENSA?",
+    "What is the acceptance rate at ENSA?",
+    "Can foreign students apply to ENSA?",
+    "Are there scholarships available for ENSA students?",
+    "Is there a minimum GPA to enter ENSA?",
+    "What documents are needed for ENSA application?",
+    # Specialization
+    "Which ENSA offers a program in cybersecurity?",
+    "Can I change my specialization after enrolling in ENSA?",
+    "What is the best ENSA for computer engineering?",
+    "Is there an ENSA that offers aeronautical engineering?",
+    "Which ENSA offers logistics and supply chain management?",
+    "Where can I study renewable energy at ENSA?",
+    "Are all specializations available at each ENSA campus?",
+    "Which ENSA is best for embedded systems?",
+    "Does ENSA offer civil engineering?",
+    "Is data science a specialization at ENSA?",
+    # Campus Life
+    "What is student life like at ENSA?",
+    "Are there sports or cultural clubs at ENSA?",
+    "Are ENSA campuses safe for students?",
+    "Does ENSA provide student housing?",
+    "Is there a cafeteria or food service on campus?",
+    "How are student elections handled at ENSA?",
+    "What extracurricular activities are popular at ENSA?",
+    "Are there any tech competitions ENSA students can join?",
+    "Can students create their own clubs at ENSA?",
+    "Are international students active in campus life?",
+    # Academics
+    "What are the courses in the preparatory cycle at ENSA?",
+    "How are exams conducted at ENSA?",
+    "Can I do research as an undergraduate at ENSA?",
+    "How are grades calculated at ENSA?",
+    "What happens if a student fails a year at ENSA?",
+    "What is the workload like for ENSA students?",
+    "Are the classes theoretical or practical?",
+    "How often are labs conducted at ENSA?",
+    "Is it possible to study part-time at ENSA?",
+    "Do ENSA students have a final year project?",
+    # Career
+    "What is the job placement rate for ENSA graduates?",
+    "What companies recruit from ENSA?",
+    "Are internships mandatory at ENSA?",
+    "Does ENSA help students find jobs?",
+    "Can I work abroad after graduating from ENSA?",
+    "What salary can an ENSA graduate expect?",
+    "Are there job fairs at ENSA?",
+    "What are the most common career paths after ENSA?",
+    "Is entrepreneurship encouraged at ENSA?",
+    "Can I pursue a PhD after ENSA?",
+    # International
+    "Does ENSA have exchange programs?",
+    "Which countries does ENSA partner with?",
+    "Can I get a double degree through ENSA?",
+    "Are there summer programs abroad for ENSA students?",
+    "Do ENSA students go on Erasmus exchanges?",
+    "What are the English-taught programs at ENSA?",
+    "How many ENSA students study abroad each year?",
+    "Is TOEFL or IELTS required for international programs?",
+    "Can I transfer to a foreign university from ENSA?",
+    "Do international students need a visa for Morocco?",
+    # Technology
+    "What labs and facilities are available at ENSA?",
+    "Are students trained in AI and machine learning?",
+    "What programming languages are taught at ENSA?",
+    "Does ENSA teach cloud computing?",
+    "Can I do a tech startup while studying at ENSA?",
+    "Is there a computer lab at ENSA?",
+    "What software tools do ENSA students use?",
+    "Are there courses in robotics at ENSA?",
+    "Is there a makerspace or innovation lab at ENSA?",
+    "Can ENSA students access online learning platforms?",
+]
+
+# Create DataFrame
+df_questions = pd.DataFrame({'Question Number': list(range(1, 101)), 'Student Question': all_questions})
+
+# Display to user
+import ace_tools as tools; tools.display_dataframe_to_user(name="100 ENSA Student Questions", dataframe=df_questions)

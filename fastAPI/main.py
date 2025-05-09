@@ -1,6 +1,5 @@
 import pika
 import json
-import base64
 import os
 from datetime import datetime
 from fastapi import FastAPI
@@ -13,82 +12,72 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Configuration
+STORAGE_DIR = "uploads"
+os.makedirs(STORAGE_DIR, exist_ok=True)
 
 
-# def save_file(message: dict):
-#     """Save received file to disk"""
-#     try:
-#         file_content =message['file_content']
-#         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-#         save_path = os.path.join(STORAGE_DIR, f"{timestamp}_{message['Document_id']}")
-        
-#         with open(save_path, "wb") as f:
-#             f.write(file_content)
-        
-#         logger.info(f"Saved file: {save_path}")
-#         return True
-        
-#     except Exception as e:
-#         logger.error(f"Failed to save file: {str(e)}")
-#         return False
 
-def save_file(message: dict):
-    STORAGE_DIR = "uploads"
-    os.makedirs(STORAGE_DIR, exist_ok=True)
- 
-    """Save received file to disk"""
+
+def save_binary_file(body, properties, headers):
+    """Save binary file content directly"""
     try:
-        # Check for required fields
-        if 'file_content' not in message:
-            logger.error("Missing file_content in message")
-            return False
+        # Extract metadata from headers
+        metadata = {}
+        
+        # Check for custom headers
+        if headers and isinstance(headers, dict):
+            file_name = headers.get('x-file-name')
+            provider = headers.get('x-provider', 'unknown')
+            mime_type = headers.get('x-mime-type', 'application/octet-stream')
             
-        # Get filename from message, with fallbacks
-        file_name = message.get('file_name', 'unknown_file')
+            # Try to get full metadata if available
+            if 'x-metadata' in headers:
+                try:
+                    metadata = json.loads(headers['x-metadata'])
+                except:
+                    logger.warning("Could not parse x-metadata header")
+                    
+        # Fallbacks if headers aren't available
+        if not file_name:
+            file_name = metadata.get('file_name', 'unknown_file')
+        if not provider:
+            provider = metadata.get('provider', 'unknown')
+        if not mime_type:
+            mime_type = metadata.get('mime_type', 'application/octet-stream')
         
-        # Debug log to see what we're receiving
-        logger.info(f"Message keys: {list(message.keys())}")
-        logger.info(f"File content type: {type(message['file_content'])}")
-        
-        try:
-            # Try to decode if the content is base64 encoded
-            if isinstance(message['file_content'], str):
-                file_content = base64.b64decode(message['file_content'])
-            else:
-                # If it's already bytes, use it directly
-                file_content = message['file_content']
-                
-            # If we got here without an exception, we have valid bytes
-            logger.info(f"Successfully processed file content of size: {len(file_content)} bytes")
-        except Exception as e:
-            logger.error(f"Error decoding file content: {str(e)}")
-            return False
-        
+        # Get content type from properties if available
+        if properties and hasattr(properties, 'content_type') and properties.content_type:
+            mime_type = properties.content_type
+            
         # Generate filename with timestamp
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         save_path = os.path.join(STORAGE_DIR, f"{timestamp}_{file_name}")
         
-        # Save the file
-        with open(save_path, "wb") as f:
-            f.write(file_content)
+        # Log what we're saving
+        logger.info(f"Saving binary file: {file_name}")
+        logger.info(f"Provider: {provider}")
+        logger.info(f"MIME type: {mime_type}")
+        logger.info(f"Content size: {len(body)} bytes")
         
-        provider = message.get('provider', 'unknown')
-        logger.info(f"Saved file: {save_path} from provider: {provider}")
+        # Save the file directly (body is already binary)
+        with open(save_path, "wb") as f:
+            f.write(body)
+            
+        logger.info(f"Successfully saved file to: {save_path}")
         return True
         
     except Exception as e:
-        logger.error(f"Failed to save file: {str(e)}")
-        # Add more detailed error logging
+        logger.error(f"Failed to save binary file: {str(e)}")
         import traceback
         logger.error(traceback.format_exc())
         return False
 
 def start_consumer():
-    """RabbitMQ consumer in background"""
+    """RabbitMQ consumer for binary content"""
     try:
         connection = pika.BlockingConnection(
             pika.ConnectionParameters(
-                host='127.0.0.1',  # Changed from 'rabbitmq' to 'localhost'
+                host='127.0.0.1',
                 port=5672,
                 heartbeat=600,
                 credentials=pika.PlainCredentials(
@@ -106,11 +95,26 @@ def start_consumer():
         
         def callback(ch, method, properties, body):
             try:
-                message = json.loads(body)
-                if save_file(message):
+                logger.info(f"Received message of size: {len(body)} bytes")
+                
+                # Extract headers from properties
+                headers = {}
+                if properties.headers:
+                    headers = properties.headers
+                    logger.info(f"Message headers: {list(headers.keys())}")
+                
+                # Save the binary content directly
+                if save_binary_file(body, properties, headers):
                     ch.basic_ack(delivery_tag=method.delivery_tag)
+                else:
+                    logger.error("Failed to save file, sending negative acknowledgment")
+                    ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
+                    
             except Exception as e:
                 logger.error(f"Error processing message: {str(e)}")
+                ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
+                import traceback
+                logger.error(traceback.format_exc())
         
         channel.basic_qos(prefetch_count=1)
         channel.basic_consume(
@@ -119,11 +123,13 @@ def start_consumer():
             auto_ack=False
         )
         
-        logger.info(" [*] File storage consumer started")
+        logger.info(" [*] Binary file storage consumer started")
         channel.start_consuming()
         
     except Exception as e:
         logger.error(f"RabbitMQ connection failed: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -139,7 +145,7 @@ app = FastAPI(lifespan=lifespan)
 
 @app.get("/")
 def health_check():
-    return {"status": "File receiver is running"}
+    return {"status": "Binary file receiver is running"}
 
 if __name__ == "__main__":
     import uvicorn

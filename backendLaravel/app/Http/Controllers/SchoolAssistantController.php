@@ -18,6 +18,10 @@ use Illuminate\Support\Facades\Storage;
 use App\Services\AiModelsProdviders\GeminiAiModelParams;
 use App\Services\AiModelsProdviders\NomicAiModelParams;
 use App\Services\AiModelsProdviders\CohereAiModelParams;
+use Illuminate\Support\Facades\Log;
+use Exception;
+
+use App\Console\Commands\SendMessage;
 class SchoolAssistantController extends Controller
 {
     protected $documentProcessor;
@@ -55,32 +59,64 @@ class SchoolAssistantController extends Controller
      */
     public function uploadDocument(Request $request , $ModelAiProvider='cohere')
     {
+       
         $request->validate([
-            'document' => 'required|file|mimes:pdf,doc,docx,txt|max:10240',
+            'documents' => 'required|array',
+            'documents.*' => 'required|file|mimes:pdf,doc,docx,txt,rtf,ppt,pptx,xls,xlsx,csv,rar,zip,7z',//|max:10240
             'title' => 'required|string|max:255',
             'category' => 'nullable|string|max:100',
         ]);
         
-        $path = $request->file('document')->store('documents');
+        $files = $request->file('documents'); // Multiple files
+        // $fileContent = file_get_contents($file->getRealPath());
+        // $path  =$file->store('documents');
+
+        try{
+            foreach($files as $file){
+                $fileName = $file->getClientOriginalName();
+                $mimeType = $file->getMimeType();
+                SendMessage::sendToRabbitMQ([
+                    'file' =>$file,
+                    'file_name' => $fileName,
+                    'mime_type' => $mimeType,
+                    'provider' => $ModelAiProvider
+                ]);
+            }
+
+            return response()->json([
+                'message' => 'Document uploaded and is being processed',
+                // 'document' => $document
+            ]);
+
+        }catch(Exception $e){
+            $mimeType = 'application/octet-stream';
+            $fileSize = 0;
+        }
+        
+
         
         // Create document record
-        $document = Document::create([
-            'title' => $request->title,
-            'category' => $request->category ?? 'General',
-            'filename' => basename($path),
-            'filepath' => $path,
-            // 'uploaded_by' => 123 ,// Auth::id()
-        ]);
+        // $document = Document::create([
+        //     'title' => $request->title,
+        //     'category' => $request->category ?? 'General',
+        //     'filename' => basename($path),
+        //     'filepath' => $path,
+        //     // 'uploaded_by' => 123 ,// Auth::id()
+        // ]);
+
+       
+        // Send the file to rabbitmq
+        
+
         
         // Process the document in the background but i don't what process the documnet by laravel
         // i want process the document by python FastAPI service
-            ProcessDocumentJob::dispatch($document,$ModelAiProvider);
+            // ProcessDocumentJob::dispatch($document,$ModelAiProvider);
 
-        return response()->json([
-            'message' => 'Document uploaded and is being processed',
-            'document' => $document
-        ]);
+       
     }
+
+    
     
 
     /**

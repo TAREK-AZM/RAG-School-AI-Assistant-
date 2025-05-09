@@ -40,7 +40,7 @@
                             
                             <div class="mb-3">
                                 <label for="document" class="form-label">Document File</label>
-                                <input type="file" class="form-control" id="document" name="document" required>
+                                <input type="file" multiple class="form-control" id="documents" name="documents[]" required>
                                 <div class="invalid-feedback" id="document-error"></div>
                                 <small class="text-muted">Accepted formats: PDF, DOC, DOCX, TXT (Max: 10MB)</small>
                             </div>
