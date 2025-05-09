@@ -1,0 +1,11 @@
+lib/
+# Virtual environment
+Scripts/
+Include/
+pyvenv.cfg
+
+# Python cache
+Api/__pycache__/
+
+# Environment files
+.env
