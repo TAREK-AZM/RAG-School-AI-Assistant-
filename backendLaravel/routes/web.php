@@ -15,7 +15,12 @@ Route::get('/chatpage', function () {
     // Chat Ask questions
 Route::post('/school-assistant/ask', [SchoolAssistantController::class, 'askQuestion'])->name('school-assistant.ask');
     
-    // View documents
+Route::get('/school-assistant/dashboard', function () {
+    return view('admin-dashboard');
+} )->name('school-assistant.dashboard');
+Route::get('/school-assistant/documents', [SchoolAssistantController::class, 'listDocuments'])->name('school-assistant.documents');
+
+    // View documents dashboard
 Route::get('/school-assistant/documents', [SchoolAssistantController::class, 'listDocuments'])->name('school-assistant.documents');
 
     // Upload documents page
@@ -25,7 +30,10 @@ Route::get('/upload', function () {
     // Upload documents
 Route::post('/school-assistant/upload', [SchoolAssistantController::class, 'uploadDocument'])->name('school-assistant.upload');
     
-    // Delete document
-Route::delete('/school-assistant/documents/{id}', [SchoolAssistantController::class, 'deleteDocument'])->name('school-assistant.delete');
+    // Get document
+// Route::get('/school-assistant/documents/{id}', [SchoolAssistantController::class, 'getDocument'])->name('school-assistant.getDocument');
+
+  // Delete document
+  Route::post('/school-assistant/documents/{id}', [SchoolAssistantController::class, 'deleteDocument'])->name('school-assistant.delete');
 
 

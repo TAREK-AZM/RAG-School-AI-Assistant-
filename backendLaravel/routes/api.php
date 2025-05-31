@@ -26,5 +26,9 @@ Route::get('/upload', function () {
 Route::post('/school-assistant/upload', [SchoolAssistantController::class, 'uploadDocument'])->name('school-assistant.upload');
     
     // Delete document
-Route::delete('/school-assistant/documents/{id}', [SchoolAssistantController::class, 'deleteDocument'])->name('school-assistant.delete');
 Route::delete('/school-assistant/documents', [SchoolAssistantController::class, 'deleteDocumentAll'])->name('school-assistant.deleteAll');
+    // Get document
+    Route::get('/school-assistant/documents/{id}', [SchoolAssistantController::class, 'getDocument'])->name('school-assistant.getDocument');
+
+//     // Delete document
+// Route::post('/school-assistant/documents/{id}', [SchoolAssistantController::class, 'deleteDocument'])->name('school-assistant.delete');
