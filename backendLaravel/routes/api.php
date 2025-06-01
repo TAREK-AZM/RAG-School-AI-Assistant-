@@ -2,8 +2,8 @@
 
 use App\Http\Controllers\SchoolAssistantController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ConversationController;
 use Illuminate\Support\Facades\Route;
-
 use Illuminate\Http\Request;
 // authentification routes
 
@@ -33,6 +33,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/auth/user', [AuthController::class, 'getUser']);
     // Logout (requires auth)
     Route::post('/logout', [AuthController::class, 'logout']);
+
+
+    // Conversation routes
+    Route::post('/conversation', [ConversationController::class, 'store']);
+    Route::get('/conversation/{id}', [ConversationController::class, 'getConversation']);
+    Route::put('/conversation/{id}', [ConversationController::class, 'update']);
+    Route::delete('/conversation/{id}', [ConversationController::class, 'deleteConversation']);
+    Route::post('/conversation/{id}/line', [ConversationController::class, 'addLineConversation']);
 });
 
 // routes/api.php

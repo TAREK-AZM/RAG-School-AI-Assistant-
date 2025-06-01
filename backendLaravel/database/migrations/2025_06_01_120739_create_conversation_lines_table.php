@@ -13,8 +13,12 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::table('users', function (Blueprint $table) {
-                    $table->boolean('is_admin')->default(false);
+        Schema::create('conversation_lines', function (Blueprint $table) {
+            $table->id();
+            $table ->foreignId('conversation_id')->constrained()->cascadeOnDelete();
+            $table->string('question');
+            $table->string('answer');
+            $table->timestamps();
         });
     }
 
@@ -25,8 +29,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::table('users', function (Blueprint $table) {
-            //
-        });
+        Schema::dropIfExists('conversation_lines');
     }
 };
