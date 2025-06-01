@@ -3,8 +3,9 @@
 import { Menu } from "lucide-react"
 import { Button } from "../ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar"
-
+import { useAuth } from "../../contexts/AuthContext"
 export default function AdminHeader({ currentView, setSidebarOpen }) {
+  const { user } = useAuth()
   return (
     <header className="bg-white border-b border-gray-200 px-6 py-4">
       <div className="flex items-center justify-between">
@@ -23,7 +24,7 @@ export default function AdminHeader({ currentView, setSidebarOpen }) {
             <AvatarFallback>JD</AvatarFallback>
           </Avatar>
           <div className="hidden sm:block">
-            <div className="text-sm font-medium text-gray-900">John Doe</div>
+            <div className="text-sm font-medium text-gray-900">{user.name + " " + user.email}</div>
             <div className="text-xs text-gray-500">Administrator</div>
           </div>
         </div>

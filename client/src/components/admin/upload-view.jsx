@@ -22,7 +22,7 @@ export default function UploadView({ handleFileUpload, isUploading, uploadProgre
           <CardTitle>Document Upload Form</CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleFileUpload} className="space-y-6">
+          <form onSubmit={handleFileUpload} encType="multipart/form-data" className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="title">Document Title</Label>
               <Input id="title" name="title" placeholder="Enter document title" required />

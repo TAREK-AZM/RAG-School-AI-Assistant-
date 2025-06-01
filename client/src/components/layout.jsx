@@ -1,6 +1,7 @@
 import { Outlet, NavLink } from "react-router-dom"
-
+import { useAuth } from "../contexts/AuthContext"
 export default function Layout() {
+  const { logout,user } = useAuth()
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-screen-2xl mx-auto">
@@ -30,7 +31,7 @@ export default function Layout() {
               >
                 Chat Interface
               </NavLink>
-              <NavLink
+              {user.is_admin ? <NavLink
                 to="/admin"
                 className={({ isActive }) =>
                   `px-4 py-2 rounded-lg font-medium transition-colors ${
@@ -39,6 +40,17 @@ export default function Layout() {
                 }
               >
                 Admin Dashboard
+              </NavLink> :""
+              }
+              <NavLink
+                onClick={() => logout()}
+                className={({ isActive }) =>
+                  `px-4 py-2 rounded-lg font-medium transition-colors ${
+                    !isActive ?  "text-gray-600 hover:text-gray-900 hover:bg-gray-100": "bg-indigo-50 text-indigo-700" 
+                  }`
+                }
+              >
+                Logout
               </NavLink>
             </nav>
           </div>

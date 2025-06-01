@@ -1,34 +1,45 @@
 <?php
 
 use App\Http\Controllers\SchoolAssistantController;
-use Illuminate\Http\Request;
+use App\Http\Controllers\AuthController;
 use Illuminate\Support\Facades\Route;
 
+use Illuminate\Http\Request;
+// authentification routes
+
+
 // Public routes
-Route::get('/school-assistant', [SchoolAssistantController::class, 'index'])->name('school-assistant');
+Route::post('/register', [AuthController::class, 'register']);
+Route::post('/login', [AuthController::class, 'login']);
+Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
+Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 
-    // Chat page
-Route::get('/chatpage', function () {
-    return view('chat');
-} );
-    // Chat Ask questions
-Route::post('/school-assistant/ask', [SchoolAssistantController::class, 'askQuestion'])->name('school-assistant.ask');
+// Authenticated routes (require login)
+Route::middleware('auth:sanctum')->group(function () {
+    // Regular user routes
+    Route::post('/school-assistant/ask', [SchoolAssistantController::class, 'askQuestion']);
+
+    // Admin-only routes
+    Route::middleware('admin')->group(function () {
+        Route::post('/convert_to_Admin', [AuthController::class, 'convertToAdmin']);
+        Route::get('/school-assistant/documents', [SchoolAssistantController::class, 'listDocuments']);
+        Route::post('/school-assistant/upload', [SchoolAssistantController::class, 'uploadDocument']);
+        Route::delete('/school-assistant/documents', [SchoolAssistantController::class, 'deleteDocumentAll']);
+        Route::get('/school-assistant/documents/{id}', [SchoolAssistantController::class, 'getDocument']);
+        Route::delete('/school-assistant/documents/{id}', [SchoolAssistantController::class, 'deleteDocument']);
+    });
     
-    // View documents
-Route::get('/school-assistant/documents', [SchoolAssistantController::class, 'listDocuments'])->name('school-assistant.documents');
-Route::get('/school-assistant/chunks', [SchoolAssistantController::class, 'listChunks'])->name('school-assistant.chunks');
+    // User routes
+    Route::get('/auth/user', [AuthController::class, 'getUser']);
+    // Logout (requires auth)
+    Route::post('/logout', [AuthController::class, 'logout']);
+});
 
-    // Upload documents page
-Route::get('/upload', function () {
-    return view('upload');// 
-} );
-    // Upload documents
-Route::post('/school-assistant/upload', [SchoolAssistantController::class, 'uploadDocument'])->name('school-assistant.upload');
-    
-    // Delete document
-Route::delete('/school-assistant/documents', [SchoolAssistantController::class, 'deleteDocumentAll'])->name('school-assistant.deleteAll');
-    // Get document
-    Route::get('/school-assistant/documents/{id}', [SchoolAssistantController::class, 'getDocument'])->name('school-assistant.getDocument');
-
-//     // Delete document
-// Route::post('/school-assistant/documents/{id}', [SchoolAssistantController::class, 'deleteDocument'])->name('school-assistant.delete');
+// routes/api.php
+Route::get('/debug-cookie', function(Request $request) {
+    return response()->json([
+        'cookie_received' => $request->cookie('auth_token'),
+        'user_authenticated' => auth()->check(),
+        'session_id' => session()->getId()
+    ]);
+});

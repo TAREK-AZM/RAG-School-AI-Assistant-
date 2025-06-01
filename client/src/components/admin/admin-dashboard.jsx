@@ -1,12 +1,12 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import AdminSidebar from "./admin-sidebar"
 import AdminHeader from "./admin-header"
 import DashboardView from "./dashboard-view"
 import UploadView from "./upload-view"
 import FileDetailsView from "./file-details-view"
-import { API_UPLOAD_ENDPOINT } from "../../config"
+import { API_UPLOAD_ENDPOINT, API_CHAT_ENDPOINT } from "../../config"
 
 export default function AdminDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -14,14 +14,16 @@ export default function AdminDashboard() {
   const [selectedFile, setSelectedFile] = useState(null)
   const [uploadProgress, setUploadProgress] = useState(0)
   const [isUploading, setIsUploading] = useState(false)
+  const [isDeleted, setIsDeleted] = useState(false)
   const [uploadStatus, setUploadStatus] = useState(null)
+  const [fetchedDocuments, setFetchedDocuments] = useState([])
 
   // Mock data
   const stats = {
-    totalDocuments: 156,
-    uploadedToday: 8,
-    categories: 12,
-    storageUsed: "1.2 GB",
+    totalDocuments: 6,
+    uploadedToday: 2,
+    categories: 3,
+    storageUsed: "654 MB",
   }
 
   const recentDocuments = [
@@ -67,97 +69,111 @@ export default function AdminDashboard() {
     },
   ]
 
-  const handleFileUpload = async (e) => {
-    e.preventDefault()
+  const handelFetchDocuments = async () => {
+    const response = await fetch(`${API_CHAT_ENDPOINT}/school-assistant/documents`, {
+      method: "GET",
+      credentials : "include",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
 
-    const formData = new FormData(e.target)
-    const title = formData.get("title")
-    const category = formData.get("category")
-    const files = formData.getAll("documents")
-
-    if (!title || files.length === 0) {
-      setUploadStatus({
-        type: "error",
-        message: "Please provide a title and at least one file",
-      })
-      return
+    if (!response.ok) {
+      throw new Error(`API request failed with status ${response.status}`)
     }
 
-    setIsUploading(true)
-    setUploadProgress(0)
-    setUploadStatus(null)
+    const data = await response.json()
 
-    try {
-      // Create a FormData object to send files
-      const uploadData = new FormData()
-      uploadData.append("title", title)
-      uploadData.append("category", category)
-
-      // Add all files
-      for (let i = 0; i < files.length; i++) {
-        uploadData.append("documents[]", files[i])
-      }
-
-      // Use XMLHttpRequest to track upload progress
-      const xhr = new XMLHttpRequest()
-
-      xhr.upload.addEventListener("progress", (event) => {
-        if (event.lengthComputable) {
-          const progress = Math.round((event.loaded / event.total) * 100)
-          setUploadProgress(progress)
-        }
-      })
-
-      xhr.addEventListener("load", () => {
-        if (xhr.status >= 200 && xhr.status < 300) {
-          const response = JSON.parse(xhr.responseText)
-          setUploadStatus({
-            type: "success",
-            message: "Document uploaded successfully!",
-            document: {
-              title: title,
-              category: category || "General",
-            },
-          })
-        } else {
-          setUploadStatus({
-            type: "error",
-            message: "Upload failed. Please try again.",
-          })
-        }
-        setIsUploading(false)
-      })
-
-      xhr.addEventListener("error", () => {
-        setUploadStatus({
-          type: "error",
-          message: "Upload failed. Please check your connection and try again.",
-        })
-        setIsUploading(false)
-      })
-
-      xhr.open("POST", API_UPLOAD_ENDPOINT)
-      xhr.send(uploadData)
-    } catch (error) {
-      console.error("Error uploading file:", error)
-      setUploadStatus({
-        type: "error",
-        message: "Upload failed. Please try again.",
-      })
-      setIsUploading(false)
-    }
+    setFetchedDocuments(data.documents)
   }
+
+
+  useEffect(() => {
+    handelFetchDocuments()
+  }, [isDeleted])
+
+const handleFileUpload = async (e) => {
+  e.preventDefault();
+  const formData = new FormData(e.target);
+  const title = formData.get("title");
+  const category = formData.get("category");
+  const files = formData.getAll("documents");
+
+  if (!title || files.length === 0) {
+    setUploadStatus({
+      type: "error",
+      message: "Please provide a title and at least one file",
+    });
+    return;
+  }
+
+  setIsUploading(true);
+  setUploadProgress(0);
+  setUploadStatus(null);
+
+  try {
+    const uploadData = new FormData();
+    uploadData.append("title", title);
+    uploadData.append("category", category || "General");
+    uploadData.append("ModelAiProvider", "nomic"); // Default provider
+    
+    // Append all files
+    files.forEach(file => {
+      uploadData.append("documents[]", file);
+    });
+
+    const response = await fetch(`${API_CHAT_ENDPOINT}/school-assistant/upload`, {
+      method: "POST",
+      credentials: "include",
+      body: uploadData, // No Content-Type header for FormData!
+    });
+
+    if (!response.ok) {
+      throw new Error(await response.text());
+    }
+
+    const result = await response.json();
+    setUploadStatus({
+      type: "success",
+      message: "Document uploaded successfully!",
+      document: result.document
+    });
+    handelFetchDocuments(); // Refresh document list
+  } catch (error) {
+    setUploadStatus({
+      type: "error",
+      message: error.message || "Upload failed. Please try again.",
+    });
+  } finally {
+    setIsUploading(false);
+  }
+};
 
   const viewFile = (file) => {
     setSelectedFile(file)
     setCurrentView("file-details")
   }
 
-  const deleteFile = (fileId) => {
-    if (window.confirm("Are you sure you want to delete this document?")) {
-      console.log("Deleting file:", fileId)
-      // Here you would make an API call to delete the file
+  const deleteFile = async (fileId) => {
+
+    const response = await fetch(`${API_CHAT_ENDPOINT}/school-assistant/documents/${fileId}`, {
+      method: "DELETE",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+    if (!response.ok) {
+      window.alert("Document failed to delete")
     }
+    if (response.ok) {
+      window.alert("Document deleted successfully")
+      setIsDeleted(true)
+    }
+    // if (window.confirm("Are you sure you want to delete this document?")) {
+    //   console.log("Deleting file:", fileId)
+    //   // Here you would make an API call to delete the file
+    // }
   }
 
   return (
@@ -167,7 +183,7 @@ export default function AdminDashboard() {
         setSidebarOpen={setSidebarOpen}
         currentView={currentView}
         setCurrentView={setCurrentView}
-        recentDocuments={recentDocuments}
+        recentDocuments={fetchedDocuments}
         viewFile={viewFile}
       />
 
@@ -183,14 +199,15 @@ export default function AdminDashboard() {
         {/* Content */}
         <main className="p-6">
           {currentView === "dashboard" && (
-            <DashboardView
-              stats={stats}
-              recentDocuments={recentDocuments}
-              setCurrentView={setCurrentView}
-              viewFile={viewFile}
-              deleteFile={deleteFile}
-            />
-          )}
+          <DashboardView
+                stats={stats}
+                recentDocuments={fetchedDocuments}
+                setCurrentView={setCurrentView}
+                viewFile={viewFile}
+                deleteFile={deleteFile}
+              />
+          )
+          }
           {currentView === "upload" && (
             <UploadView
               handleFileUpload={handleFileUpload}

@@ -185,7 +185,12 @@ class SchoolAssistantController extends Controller
             'failed' => Document::where('status', 'failed')->count()
         ];
 
-        return view('admin-dashboard', compact('documents', 'stats'));
+        // return view('admin-dashboard', compact('documents', 'stats'));
+        return response()->json([
+            "documents" => $documents,
+            "stats" => $stats
+        ]);
+            
     }
 
     public function listChunks(Request $request)
@@ -212,8 +217,9 @@ class SchoolAssistantController extends Controller
         $document->embeddings()->delete();
         $document->delete();
 
-        return $this->listDocuments($request)
-            ->with('success', 'Document and related embeddings deleted successfully');
+        return response()->json([
+                'message', 'Document and related embeddings deleted successfully'
+        ],201);
     }
 
     public function getDocument($id)

@@ -71,7 +71,7 @@ export default function AdminSidebar({
                     <div className="text-sm font-medium text-gray-900 truncate">
                       {doc.title.length > 20 ? doc.title.substring(0, 20) + "..." : doc.title}
                     </div>
-                    <div className="text-xs text-gray-500">{new Date(doc.date).toLocaleDateString()}</div>
+                    <div className="text-xs text-gray-500">{new Date(doc.processed_at).toLocaleDateString()}</div>
                   </div>
                 </Button>
               ))}

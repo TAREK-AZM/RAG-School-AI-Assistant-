@@ -34,7 +34,7 @@ export default function FileDetailsView({ selectedFile, setCurrentView }) {
               <div className="flex flex-wrap gap-4 text-sm text-gray-600">
                 <div className="flex items-center space-x-1">
                   <Calendar className="w-4 h-4" />
-                  <span>{selectedFile.date}</span>
+                  <span>{selectedFile.processed_at}</span>
                 </div>
                 <div className="flex items-center space-x-1">
                   <Folder className="w-4 h-4" />
@@ -42,7 +42,7 @@ export default function FileDetailsView({ selectedFile, setCurrentView }) {
                 </div>
                 <div className="flex items-center space-x-1">
                   <HardDrive className="w-4 h-4" />
-                  <span>{selectedFile.size}</span>
+                  <span>10MB</span>
                 </div>
               </div>
             </div>
@@ -79,7 +79,7 @@ export default function FileDetailsView({ selectedFile, setCurrentView }) {
                     <div className="font-medium text-gray-900">Uploaded</div>
                     <div className="text-sm text-gray-500">by System</div>
                   </div>
-                  <span className="text-sm text-gray-500">{selectedFile.date}</span>
+                  <span className="text-sm text-gray-500">{selectedFile.created_at}</span>
                 </div>
                 <div className="flex items-center justify-between p-4">
                   <div>

@@ -31,7 +31,7 @@ export default function DashboardView({ stats, recentDocuments, setCurrentView, 
   const StatusBadge = ({ status }) => {
     const variants = {
       completed: "bg-green-100 text-green-800 hover:bg-green-100",
-      processing: "bg-yellow-100 text-yellow-800 hover:bg-yellow-100",
+      pending: "bg-yellow-100 text-yellow-800 hover:bg-yellow-100",
       failed: "bg-red-100 text-red-800 hover:bg-red-100",
     }
 
@@ -41,6 +41,8 @@ export default function DashboardView({ stats, recentDocuments, setCurrentView, 
       </Badge>
     )
   }
+
+
 
   return (
     <div className="space-y-6">
@@ -65,11 +67,12 @@ export default function DashboardView({ stats, recentDocuments, setCurrentView, 
           description="3 more than yesterday"
           trend="3"
         />
-        <StatCard icon={Folder} title="Categories" value={stats.categories} description="Most used: Financial" />
-        <StatCard icon={HardDrive} title="Storage Used" value={stats.storageUsed} description="of 5 GB (24%)" />
+        <StatCard icon={Folder} title="Categories" value={stats.categories} description="Most used: Education" />
+        <StatCard icon={HardDrive} title="Storage Used" value={stats.storageUsed} description="" />
       </div>
 
       {/* Recent Documents Table */}
+
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Recent Documents</CardTitle>
@@ -91,6 +94,7 @@ export default function DashboardView({ stats, recentDocuments, setCurrentView, 
               </TableRow>
             </TableHeader>
             <TableBody>
+            
               {recentDocuments.map((doc) => (
                 <TableRow key={doc.id}>
                   <TableCell>
@@ -100,8 +104,8 @@ export default function DashboardView({ stats, recentDocuments, setCurrentView, 
                     </div>
                   </TableCell>
                   <TableCell>{doc.category}</TableCell>
-                  <TableCell>{new Date(doc.date).toLocaleString()}</TableCell>
-                  <TableCell>{doc.size}</TableCell>
+                  <TableCell>{new Date(doc.created_at).toLocaleString()}</TableCell>
+                  <TableCell>10MB</TableCell>
                   <TableCell>
                     <StatusBadge status={doc.status} />
                   </TableCell>
@@ -121,6 +125,9 @@ export default function DashboardView({ stats, recentDocuments, setCurrentView, 
           </Table>
         </CardContent>
       </Card>
+
+
+
     </div>
   )
 }

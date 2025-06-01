@@ -18,9 +18,9 @@ export default function ChatPage() {
   const chatBodyRef = useRef(null)
 
   const exampleQuestions = [
-    "What are the main features of the system?",
-    "Can you summarize the document about ENSAT?",
-    "What is RAG and how does it work?",
+    "What is ENSA and how is it different from other engineering schools in Morocco?",
+    "Which is the oldest ENSA campus?",
+    "Are ENSA diplomas recognized internationally?",
   ]
 
   useEffect(() => {
@@ -52,8 +52,9 @@ export default function ChatPage() {
 
     try {
       // Send request to the chat API
-      const response = await fetch(API_CHAT_ENDPOINT, {
+      const response = await fetch(`${API_CHAT_ENDPOINT}/school-assistant/ask`, {
         method: "POST",
+        credentials : "include",
         headers: {
           "Content-Type": "application/json",
         },
