@@ -2,8 +2,8 @@
 
 use App\Http\Controllers\SchoolAssistantController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ConversationController;
 use Illuminate\Support\Facades\Route;
-
 use Illuminate\Http\Request;
 // authentification routes
 

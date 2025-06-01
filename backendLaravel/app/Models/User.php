@@ -46,4 +46,9 @@ class User extends Authenticatable
     {
         return $this->is_admin;
     }
+
+    public function Conversations()
+    {
+        return $this->hasMany(Conversation::class);
+    }
 }
